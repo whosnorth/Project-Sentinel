@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
 import { SentinelLayout } from "./components/SentinelLayout";
 
 // Lazy load Sentinel pages
@@ -18,23 +20,28 @@ const LoadingFallback = () => (
   </div>
 );
 
+const queryClient = new QueryClient();
+
 const App = () => (
-  <BrowserRouter>
-    <Suspense fallback={<LoadingFallback />}>
-      <Routes>
-        <Route path="/" element={<SentinelLayout />}>
-          <Route index element={<SentinelDashboard />} />
-          <Route path="country" element={<CountryIntelligence />} />
-          <Route path="country/:code" element={<CountryIntelligence />} />
-          <Route path="feed" element={<SentinelLiveFeed />} />
-          <Route path="matrix" element={<SentinelRiskMatrix />} />
-          <Route path="chat" element={<SentinelIntelChat />} />
-          <Route path="history" element={<SentinelChatHistory />} />
-          <Route path="workflows" element={<SentinelWorkflows />} />
-        </Route>
-      </Routes>
-    </Suspense>
-  </BrowserRouter>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<SentinelLayout />}>
+            <Route index element={<SentinelDashboard />} />
+            <Route path="country" element={<CountryIntelligence />} />
+            <Route path="country/:code" element={<CountryIntelligence />} />
+            <Route path="feed" element={<SentinelLiveFeed />} />
+            <Route path="matrix" element={<SentinelRiskMatrix />} />
+            <Route path="chat" element={<SentinelIntelChat />} />
+            <Route path="history" element={<SentinelChatHistory />} />
+            <Route path="workflows" element={<SentinelWorkflows />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+    <Toaster />
+  </QueryClientProvider>
 );
 
 export default App;

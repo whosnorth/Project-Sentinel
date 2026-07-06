@@ -1,4 +1,4 @@
-export type CountryWeight = { code: string; weight: number; name: string };
+﻿export type CountryWeight = { code: string; weight: number; name: string };
 
 export type LocationSelection =
   | { type: "global" }
@@ -10,7 +10,7 @@ export const REGIONS: { name: string; countries: CountryWeight[] }[] = [
     countries: [
       { code: "NG", name: "Nigeria", weight: 0.7 },
       { code: "GH", name: "Ghana", weight: 0.15 },
-      { code: "CI", name: "C�te d'Ivoire", weight: 0.1 },
+      { code: "CI", name: "Côte d'Ivoire", weight: 0.1 },
       { code: "SN", name: "Senegal", weight: 0.05 },
     ],
   },
