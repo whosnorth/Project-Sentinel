@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Industrial Light Theme - Clean Slate */
+    --background: 0 0% 100%;
+    /* White */
+    --foreground: 222 47% 11%;
+    /* Deep Gray */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 239 84% 67%;
+    /* Indigo #6366F1 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96.1%;
+    /* Very Light Gray */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 239 84% 67%;
+
+    --radius: 0.25rem;
+
+    /* Sidebar Variables - Light */
+    --sidebar-background: 210 40% 98%;
+    /* Slightly Off-White */
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 239 84% 67%;
+
+    /* Status Colors */
+    --success: 161 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Legacy/ESG Specifics */
+    --esg-environment: 142 76% 36%;
+    --esg-social: 262 52% 47%;
+    --esg-governance: 217 91% 60%;
+
+    --status-draft: 215 16% 47%;
+    --status-submitted: 38 92% 50%;
+    --status-approved: 142 76% 36%;
+  }
+
+  .dark {
+    /* Industrial Dark Theme - Deep Void */
+    --background: 220 17% 7%;
+    /* #0F1115 */
+    --foreground: 215 28% 91%;
+    /* #E2E8F0 */
+    --card: 220 16% 11%;
+    /* #181B21 */
+    --card-foreground: 215 28% 91%;
+    --popover: 220 16% 11%;
+    --popover-foreground: 215 28% 91%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 12% 14%;
+    --secondary-foreground: 215 28% 91%;
+    --muted: 220 12% 14%;
+    --muted-foreground: 215 16% 65%;
+    --accent: 220 12% 14%;
+    --accent-foreground: 215 28% 91%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 12% 20%;
+    --input: 220 12% 20%;
+    --ring: 239 84% 67%;
+    --sidebar-background: 220 16% 11%;
+    --sidebar-foreground: 215 28% 91%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 12% 14%;
+    --sidebar-accent-foreground: 215 28% 91%;
+    --sidebar-border: 220 12% 20%;
+    --sidebar-ring: 239 84% 67%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Utility for Data Font */
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  }
+}
+
+@layer utilities {
+
+  /* No glassmorphism */
+  .text-gradient {
+    @apply text-foreground;
+  }
+}
+
+/* Leaflet Map Fixes */
+.leaflet-container {
+  background: #09090b !important;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-control-attribution {
+  background-color: #181b21 !important;
+  color: #e2e8f0 !important;
+  border-color: #27272a !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #09090b !important;
+  color: #f4f4f5 !important;
+  border: 1px solid #27272a !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-close-button {
+  color: #a1a1aa !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: #ffffff !important;
+}
+
+
+@keyframes marker-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+/*
+.leaflet-tile {
+  -webkit-filter: grayscale(100%) invert(100%) brightness(0.7) contrast(1.2) !important;
+  filter: grayscale(100%) invert(100%) brightness(0.7) contrast(1.2) !important;
+}
+*/
+
