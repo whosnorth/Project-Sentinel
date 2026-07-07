@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Loader2, MessageSquare, X, Download, Search, Plus } from "lucide-react";
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
+import { marked } from "marked";
 import { type SentinelEvent } from "@/hooks/useSentinelRealtime";
 import {
   DropdownMenu,
@@ -276,14 +277,26 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
     let extension = format;
 
     if (format === "doc") {
+      const parsedContent = marked.parse(msg.content);
       content = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><meta charset='utf-8'><title>Sentinel Intelligence Brief</title></head>
+        <head>
+          <meta charset='utf-8'>
+          <title>Sentinel Intelligence Brief</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            h1 { color: #d97706; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+            h2, h3 { color: #2563eb; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
         <body style="font-family: Arial, sans-serif;">
           <h1 style="color: #d97706;">Sentinel Intelligence Brief</h1>
           <p><strong>Date:</strong> ${msg.timestamp.toLocaleString()}</p>
           <hr/>
-          <div>${msg.content.replace(/\n/g, '<br/>')}</div>
+          <div>${parsedContent}</div>
       `;
       if (msg.sources && msg.sources.length > 0) {
         content += `<h3>Grounding Appendix</h3><ul>`;
@@ -323,32 +336,77 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
     URL.revokeObjectURL(url);
   }, []);
 
-  const exportFullThread = useCallback(() => {
-    let content = `# Sentinel Intelligence: Full Chat Thread\n\n`;
-    content += `**Exported At:** ${new Date().toLocaleString()}\n\n---\n\n`;
-    
-    messages.forEach(msg => {
-      content += `### ${msg.role === 'user' ? 'USER' : 'SENTINEL AI'} [${msg.timestamp.toLocaleString()}]\n\n`;
-      content += `${msg.content}\n\n`;
-      if (msg.sources && msg.sources.length > 0) {
-        content += `**Sources Used:**\n`;
-        msg.sources.forEach(s => {
-          if (typeof s === 'string') {
-            content += `- ${s}\n`;
-          } else {
-            content += `- [${s.label}](${s.url})\n`;
-          }
-        });
-        content += `\n`;
-      }
-      content += `---\n\n`;
-    });
+  const exportFullThread = useCallback((format: "md" | "doc" = "md") => {
+    let content = "";
+    let mimeType = "";
+    let extension = format;
 
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    if (format === "doc") {
+      content = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Sentinel Full Chat Thread</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            h1 { color: #d97706; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+            h2, h3 { color: #2563eb; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .message-header { font-weight: bold; margin-top: 20px; color: #555; }
+          </style>
+        </head>
+        <body>
+          <h1>Sentinel Intelligence: Full Chat Thread</h1>
+          <p><strong>Exported At:</strong> ${new Date().toLocaleString()}</p>
+          <hr/>
+      `;
+      
+      messages.forEach(msg => {
+        const parsedContent = marked.parse(msg.content);
+        content += `<div class="message-header">${msg.role === 'user' ? 'USER' : 'SENTINEL AI'} [${msg.timestamp.toLocaleString()}]</div>`;
+        content += `<div>${parsedContent}</div>`;
+        if (msg.sources && msg.sources.length > 0) {
+          content += `<strong>Sources Used:</strong><ul>`;
+          msg.sources.forEach(s => {
+            if (typeof s === 'string') content += `<li>${s}</li>`;
+            else content += `<li><a href="${s.url}">${s.label}</a></li>`;
+          });
+          content += `</ul>`;
+        }
+        content += `<hr/>`;
+      });
+      content += `</body></html>`;
+      mimeType = "application/msword;charset=utf-8";
+    } else {
+      content = `# Sentinel Intelligence: Full Chat Thread\n\n`;
+      content += `**Exported At:** ${new Date().toLocaleString()}\n\n---\n\n`;
+      
+      messages.forEach(msg => {
+        content += `### ${msg.role === 'user' ? 'USER' : 'SENTINEL AI'} [${msg.timestamp.toLocaleString()}]\n\n`;
+        content += `${msg.content}\n\n`;
+        if (msg.sources && msg.sources.length > 0) {
+          content += `**Sources Used:**\n`;
+          msg.sources.forEach(s => {
+            if (typeof s === 'string') {
+              content += `- ${s}\n`;
+            } else {
+              content += `- [${s.label}](${s.url})\n`;
+            }
+          });
+          content += `\n`;
+        }
+        content += `---\n\n`;
+      });
+      mimeType = "text/markdown;charset=utf-8";
+    }
+
+    const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `sentinel_full_thread_${Date.now()}.md`;
+    link.download = `sentinel_full_thread_${Date.now()}.${extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -497,9 +555,21 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
           <button onClick={handleNewChat} className="text-zinc-500 hover:text-amber-400 transition-colors" title="New Chat">
             <Plus className="h-4 w-4" />
           </button>
-          <button onClick={exportFullThread} className="text-zinc-500 hover:text-amber-400 transition-colors" title="Export Full Thread">
-            <Download className="h-4 w-4" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="text-zinc-500 hover:text-amber-400 transition-colors" title="Export Full Thread">
+                <Download className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-300">
+              <DropdownMenuItem onClick={() => exportFullThread("md")} className="hover:bg-zinc-800 hover:text-amber-400 cursor-pointer">
+                Export as Markdown (.md)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportFullThread("doc")} className="hover:bg-zinc-800 hover:text-amber-400 cursor-pointer">
+                Export as Word Doc (.doc)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {onClose && (
             <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300">
               <X className="h-4 w-4" />
