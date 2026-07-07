@@ -3,6 +3,12 @@ import { Send, Loader2, MessageSquare, X, Download, Search } from "lucide-react"
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { type SentinelEvent } from "@/hooks/useSentinelRealtime";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const QUICK_PROMPTS = [
   "What is the cause and effect of this event?",
@@ -264,30 +270,57 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
     }
   }, [messages, selectedEvent?.id, bulkEvents]);
 
-  const exportBrief = useCallback((msg: Message) => {
-    let content = `# Sentinel Intelligence Brief\n\n`;
-    content += `**Date:** ${msg.timestamp.toLocaleString()}\n\n`;
-    content += `${msg.content}\n\n`;
-    
-    if (msg.sources && msg.sources.length > 0) {
-      content += `### Grounding Appendix\n\n`;
-      msg.sources.forEach(s => {
-        if (typeof s === 'string') {
-          content += `- ${s}\n`;
-        } else {
-          content += `- [${s.label}](${s.url})\n`;
-        }
-      });
+  const exportBrief = useCallback((msg: Message, format: "md" | "txt" | "doc" = "md") => {
+    let content = "";
+    let mimeType = "";
+    let extension = format;
+
+    if (format === "doc") {
+      content = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>Sentinel Intelligence Brief</title></head>
+        <body style="font-family: Arial, sans-serif;">
+          <h1 style="color: #d97706;">Sentinel Intelligence Brief</h1>
+          <p><strong>Date:</strong> ${msg.timestamp.toLocaleString()}</p>
+          <hr/>
+          <div>${msg.content.replace(/\n/g, '<br/>')}</div>
+      `;
+      if (msg.sources && msg.sources.length > 0) {
+        content += `<h3>Grounding Appendix</h3><ul>`;
+        msg.sources.forEach(s => {
+          if (typeof s === 'string') content += `<li>${s}</li>`;
+          else content += `<li><a href="${s.url}">${s.label}</a></li>`;
+        });
+        content += `</ul>`;
+      }
+      content += `</body></html>`;
+      mimeType = "application/msword;charset=utf-8";
+    } else {
+      // Markdown or TXT
+      content = `# Sentinel Intelligence Brief\n\n`;
+      content += `**Date:** ${msg.timestamp.toLocaleString()}\n\n`;
+      content += `${msg.content}\n\n`;
+      
+      if (msg.sources && msg.sources.length > 0) {
+        content += `### Grounding Appendix\n\n`;
+        msg.sources.forEach(s => {
+          if (typeof s === 'string') {
+            content += `- ${s}\n`;
+          } else {
+            content += `- [${s.label}](${s.url})\n`;
+          }
+        });
+      }
+      mimeType = "text/plain;charset=utf-8";
     }
 
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `sentinel_brief_${Date.now()}.md`;
-    document.body.appendChild(link);
+    link.download = `sentinel-brief-${msg.id.substring(0, 6)}.${extension}`;
     link.click();
-    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }, []);
 
   const exportFullThread = useCallback(() => {
@@ -601,13 +634,25 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
               )}
               {msg.role === "assistant" && (
                 <div className="mt-3 flex justify-end">
-                  <button
-                    onClick={() => exportBrief(msg)}
-                    className="flex items-center gap-1.5 rounded-sm bg-zinc-800/50 px-2 py-1 text-[9px] font-mono text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 transition-colors border border-zinc-700/50"
-                  >
-                    <Download className="h-3 w-3" />
-                    EXPORT BRIEF
-                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-1.5 rounded-sm bg-zinc-800/50 px-2 py-1 text-[9px] font-mono text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 transition-colors border border-zinc-700/50">
+                        <Download className="h-3 w-3" />
+                        EXPORT BRIEF
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 bg-[#0d1117] border-[#1a2332] text-zinc-300">
+                      <DropdownMenuItem onClick={() => exportBrief(msg, "md")} className="hover:bg-[#1a2332] focus:bg-[#1a2332] cursor-pointer text-xs">
+                        Export as Markdown (.md)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportBrief(msg, "txt")} className="hover:bg-[#1a2332] focus:bg-[#1a2332] cursor-pointer text-xs">
+                        Export as Text (.txt)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportBrief(msg, "doc")} className="hover:bg-[#1a2332] focus:bg-[#1a2332] cursor-pointer text-xs">
+                        Export as Word (.doc)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               )}
               <p className="mt-1.5 font-mono text-[8px] text-zinc-600">
