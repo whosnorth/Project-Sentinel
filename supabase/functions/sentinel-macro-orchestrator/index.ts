@@ -17,7 +17,7 @@ const FIREWORKS_BASE = "https://api.fireworks.ai/inference/v1";
 // Environmental Model Configuration
 const MACRO_MODEL = Deno.env.get("MACRO_MODEL") || "accounts/fireworks/models/deepseek-v4-pro";
 const FORMATTER_MODEL = Deno.env.get("FORMATTER_MODEL") || "accounts/fireworks/models/deepseek-v4-flash";
-const VISION_MODEL = Deno.env.get("VISION_MODEL") || "accounts/fireworks/models/gemma-4-31b-it";
+const VISION_MODEL = Deno.env.get("VISION_MODEL") || "accounts/fireworks/models/qwen3p7-plus";
 const CODER_MODEL = Deno.env.get("CODER_MODEL") || "accounts/fireworks/models/deepseek-v4-pro";
 
 // Helper to interact with Fireworks Chat Completion
