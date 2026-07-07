@@ -10,7 +10,7 @@ export type SentinelEvent = {
   city: string | null;
   lat: number | null;
   lng: number | null;
-  event_type: "security" | "economy" | "social" | "positive" | "infrastructure" | "environmental" | "baseline_metric";
+  event_type: "security" | "economy" | "social" | "positive" | "infrastructure" | "environmental" | "baseline_metric" | "custom_internal_event" | string;
   severity: number;
   ai_analysis: Record<string, unknown> | null;
   occurred_at: string;

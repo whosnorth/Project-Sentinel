@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Loader2, MessageSquare, X, Download, Search } from "lucide-react";
+import { Send, Loader2, MessageSquare, X, Download, Search, Plus } from "lucide-react";
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { type SentinelEvent } from "@/hooks/useSentinelRealtime";
@@ -469,6 +469,15 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
     }
   }, [input, loading, countryCode, selectedEvent, messages]);
 
+  const handleNewChat = () => {
+    setSessionId(null);
+    setMessages([WELCOME_MESSAGE]);
+    setInvestigating(false);
+    setInvestigatedLocally(false);
+    const storageKey = `sentinel_chat_${selectedEvent?.id || (bulkEvents ? 'bulk' : 'global')}`;
+    localStorage.removeItem(storageKey);
+  };
+
   return (
     <div className="flex flex-1 flex-col border-l border-[#1a2332] bg-[#080c10] overflow-hidden w-full">
       {/* Header */}
@@ -485,6 +494,9 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button onClick={handleNewChat} className="text-zinc-500 hover:text-amber-400 transition-colors" title="New Chat">
+            <Plus className="h-4 w-4" />
+          </button>
           <button onClick={exportFullThread} className="text-zinc-500 hover:text-amber-400 transition-colors" title="Export Full Thread">
             <Download className="h-4 w-4" />
           </button>
