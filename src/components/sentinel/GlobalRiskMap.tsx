@@ -43,6 +43,7 @@ function getEventColor(event: SentinelEvent): EventColor {
     case "positive": return [34, 197, 94, 200];
     case "infrastructure":
     case "environmental": return [249, 115, 22, 240];
+    case "custom_internal_event": return [168, 85, 247, 240]; // Purple (bg-purple-500)
     default:         return [161, 161, 170, 160];
   }
 }

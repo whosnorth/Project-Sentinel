@@ -31,7 +31,7 @@ export function parseBYODCsv(file: File): Promise<ParsedBYODEvent[]> {
               latitude: lat,
               longitude: lng,
               severity: isNaN(severity) ? 5 : Math.max(1, Math.min(10, severity)), // Clamp 1-10
-              event_type: row.event_type || row.category || 'custom_internal_event',
+              event_type: (row.event_type || row.category || 'custom_internal_event').toLowerCase().trim(),
               occurred_at: row.occurred_at || row.date || new Date().toISOString()
             };
           });
