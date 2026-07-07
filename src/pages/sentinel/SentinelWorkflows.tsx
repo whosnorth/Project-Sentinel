@@ -587,28 +587,31 @@ function WorkflowCanvas() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-xs text-slate-400 flex justify-between">
+                        <label className="text-xs text-slate-400 flex justify-between items-center">
                           <span>Radius (km)</span>
-                          <span className="text-[#00f0ff]">{(selectedNode.data.config as any)?.radius || 500} km</span>
+                          <div className="flex items-center gap-1">
+                            <input 
+                              type="number"
+                              min="10"
+                              max="10000"
+                              className="bg-black border border-white/10 rounded px-1 py-0.5 text-[#00f0ff] w-20 text-right font-mono text-xs"
+                              value={(selectedNode.data.config as any)?.radius || 500}
+                              onChange={(e) => {
+                                const v = parseInt(e.target.value);
+                                if (!isNaN(v)) {
+                                  setNodes(nds => nds.map(n => n.id === selectedNode.id ? { ...n, data: { ...n.data, config: { ...(n.data.config as any || {}), radius: v } } } : n));
+                                }
+                              }}
+                            />
+                            <span className="text-[#00f0ff] text-xs">km</span>
+                          </div>
                         </label>
                         <input 
                           type="range" 
-                          min="10" max="5000" step="10"
+                          min="10" max="10000" step="10"
                           className="w-full accent-[#00f0ff]"
                           value={(selectedNode.data.config as any)?.radius || 500}
-                          onPointerDownCapture={(e) => {
-                            const currentRadius = (selectedNode.data.config as any)?.radius;
-                            if (currentRadius !== undefined && !unlockedRadii[selectedNode.id]) {
-                              e.preventDefault();
-                              if (window.confirm("Are you sure you want to modify the existing radius?")) {
-                                setUnlockedRadii(prev => ({ ...prev, [selectedNode.id]: true }));
-                              }
-                            }
-                          }}
                           onChange={(e) => {
-                            if ((selectedNode.data.config as any)?.radius !== undefined && !unlockedRadii[selectedNode.id]) {
-                              return; // Extra protection
-                            }
                             const val = e.target.value;
                             setNodes(nds => nds.map(n => {
                               if (n.id === selectedNode.id) {

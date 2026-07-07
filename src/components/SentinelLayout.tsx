@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Suspense, useState, useEffect } from "react";
+import { InternalNotificationBell } from "@/components/InternalNotificationBell";
 import {
   Globe,
   Flag,
@@ -213,6 +214,7 @@ export const SentinelLayout = () => {
               </span>
             </div>
             <LocalClock />
+            <InternalNotificationBell />
             <AlertTriangle className="h-3.5 w-3.5 text-zinc-600" />
           </div>
         </header>
