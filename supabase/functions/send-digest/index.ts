@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 // Follow this setup guide to integrate the Deno runtime into your application:
 // https://deno.land/manual/examples/deploy_node_server
 
@@ -61,12 +61,12 @@ Deno.serve(async (req) => {
 
             // Generate Content (Mocking the Logic from the Artifact)
             const emailContent = `
-        <h1>${type === 'weekly' ? '🛡️ Weekly Compliance Pulse' : '📋 Monthly Regulatory Summary'}</h1>
+        <h1>${type === 'weekly' ? '🛡️ Weekly Sentinel Intelligence Pulse' : '📋 Monthly Geopolitical Summary'}</h1>
         <p>Dear System Steward,</p>
         <p>Here is your automated snapshot for ${new Date().toLocaleDateString()}.</p>
-        <p><strong>Global Status:</strong> 🟢 COMPLIANT</p>
+        <p><strong>Global Status:</strong> 🟢 SECURE</p>
         <br/>
-        <a href="https://complimetrics.app/dashboard">Open Console</a>
+        <a href="https://sentinel.app/dashboard">Open Console</a>
       `
 
             // Send Email (Using Resend or similar - MOCKED HERE)
@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                from: 'CompliMetrics <no-reply@complimetrics.com>',
+                from: 'Sentinel <no-reply@sentinel.com>',
                 to: userData.user.email,
                 subject: `${type === 'weekly' ? 'Weekly' : 'Monthly'} Digest`,
                 html: emailContent

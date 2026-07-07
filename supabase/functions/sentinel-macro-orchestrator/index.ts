@@ -38,8 +38,8 @@ async function callModel(model: string, messages: any[], temperature = 0.5, maxT
     headers: {
       "Authorization": `Bearer ${FIREWORKS_API_KEY}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://complimetrics.ai",
-      "X-Title": "Complimetrics Sentinel Macro-Orchestrator"
+      "HTTP-Referer": "https://sentinel.ai",
+      "X-Title": "Sentinel Macro-Orchestrator"
     },
     body: JSON.stringify(body),
   });
