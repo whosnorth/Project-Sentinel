@@ -11,6 +11,7 @@ import {
   Shield,
   AlertTriangle,
   Clock,
+  Database,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const navItems = [
   { path: "/chat",     icon: MessageSquare,  label: "Intel Chat",       sub: "AI ANALYST" },
   { path: "/history",  icon: Clock,          label: "Chat History",     sub: "PAST INVESTIGATIONS" },
   { path: "/workflows", icon: LayoutGrid,     label: "Workflow Engine",  sub: "AUTOMATION" },
+  { path: "/data-sources", icon: Database,    label: "Data Sources",     sub: "BYOD INGESTION" },
 ];
 
 function LocalClock() {

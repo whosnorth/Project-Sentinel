@@ -15,6 +15,7 @@ export type SentinelEvent = {
   ai_analysis: Record<string, unknown> | null;
   occurred_at: string;
   full_text?: string | null;
+  is_proprietary?: boolean;
   source_url?: string | null;
 };
 

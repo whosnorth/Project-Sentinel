@@ -333,10 +333,14 @@ export function GlobalRiskMap({
     getRadius: (d) => getEventRadius(d),
     getFillColor: (d) => getEventColor(d),
     getLineColor: (d) => {
+      if (d.is_proprietary) return [255, 255, 255, 255] as EventColor;
       const base = getEventColor(d);
       return [base[0], base[1], base[2], 255] as EventColor;
     },
+    getLineWidth: (d) => d.is_proprietary ? 3 : 1,
     lineWidthMinPixels: 1,
+    lineWidthMaxPixels: 6,
+    lineWidthScale: 1,
     stroked: true,
     filled: true,
     radiusMinPixels: 4,
@@ -374,8 +378,11 @@ export function GlobalRiskMap({
     getPosition: (d) => [d.lng!, d.lat!],
     getRadius: (d) => getEventRadius(d),
     getFillColor: (d) => getEventColor(d),
-    getLineColor: [255, 255, 255, 200] as EventColor,
+    getLineColor: (d) => d.is_proprietary ? ([255, 255, 255, 255] as EventColor) : ([255, 255, 255, 200] as EventColor),
+    getLineWidth: (d) => d.is_proprietary ? 4 : 2,
     lineWidthMinPixels: 2,
+    lineWidthMaxPixels: 8,
+    lineWidthScale: 1,
     stroked: true,
     filled: true,
     radiusMinPixels: 5,

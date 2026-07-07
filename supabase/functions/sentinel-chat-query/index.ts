@@ -54,9 +54,7 @@ function lfTraceUpdate(traceId: string, output: any) {
 
 const FIREWORKS_BASE = "https://api.fireworks.ai/inference/v1";
 const FALLBACK_MODELS = [
-  "accounts/fireworks/models/deepseek-v4-flash",
-  "accounts/fireworks/models/deepseek-v4-pro",
-  "accounts/fireworks/models/llama-v3p1-70b-instruct",
+  "accounts/fireworks/models/glm-5p2",
 ];
 
 const CORS_HEADERS = {
@@ -78,7 +76,7 @@ Output ONLY a valid JSON object matching this schema, no markdown blocks:
 User Query: "${query}"`;
 
   const genId = crypto.randomUUID();
-  if (traceId) await lfIngest([lfGenerationStart(genId, traceId, "extractFilters", "accounts/fireworks/models/deepseek-v4-pro", prompt)]);
+  if (traceId) await lfIngest([lfGenerationStart(genId, traceId, "extractFilters", "accounts/fireworks/models/glm-5p2", prompt)]);
 
   try {
     const res = await fetch("https://api.fireworks.ai/inference/v1/chat/completions", {
@@ -88,7 +86,7 @@ User Query: "${query}"`;
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "accounts/fireworks/models/deepseek-v4-pro",
+        model: "accounts/fireworks/models/glm-5p2",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.1,
         response_format: { type: "json_object" },
@@ -249,7 +247,8 @@ Deno.serve(async (req) => {
         p_country_code: finalCountry || null,
         p_start_date: filters.start_date || null,
         p_end_date: filters.end_date || null,
-        p_min_severity: filters.min_severity || null
+        p_min_severity: filters.min_severity || null,
+        p_organization_id: "00000000-0000-0000-0000-000000000001" // Hardcoded test org id (matching ingest mock)
       });
 
       if (dbErr) throw dbErr;

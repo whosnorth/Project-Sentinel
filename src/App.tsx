@@ -11,6 +11,7 @@ import SentinelLiveFeed from "./pages/sentinel/LiveFeed";
 import SentinelRiskMatrix from "./pages/sentinel/RiskMatrix";
 import SentinelIntelChat from "./pages/sentinel/IntelChat";
 import SentinelChatHistory from "./pages/sentinel/ChatHistory";
+import { DataSources } from "./pages/sentinel/DataSources";
 import SentinelWorkflows from "./pages/sentinel/SentinelWorkflows";
 import AuthPage from "./pages/Auth";
 import { AuthRoute } from "./components/AuthRoute";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="chat" element={<SentinelIntelChat />} />
             <Route path="history" element={<SentinelChatHistory />} />
             <Route path="workflows" element={<SentinelWorkflows />} />
+            <Route path="data-sources" element={<DataSources />} />
           </Route>
         </Routes>
       </Suspense>
