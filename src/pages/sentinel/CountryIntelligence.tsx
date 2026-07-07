@@ -231,6 +231,11 @@ export default function CountryIntelligence() {
             <ChatSidebar
               selectedEvent={selectedEvent}
               bulkEvents={bulkEvents}
+              onClose={() => {
+                setActiveTab('analytics');
+                setSelectedEvent(null);
+                setBulkEvents(null);
+              }}
               onVirtualEventCreated={async (eventId) => {
                 if (!selectedEvent) {
                   const { data } = await supabase

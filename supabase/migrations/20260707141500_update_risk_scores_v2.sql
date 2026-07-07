@@ -1,0 +1,9 @@
+-- Add CSI v2 columns to risk_scores table
+ALTER TABLE public.risk_scores 
+ADD COLUMN IF NOT EXISTS fsi_score NUMERIC(5,2),
+ADD COLUMN IF NOT EXISTS wgi_score NUMERIC(5,2),
+ADD COLUMN IF NOT EXISTS acled_score NUMERIC(5,2),
+ADD COLUMN IF NOT EXISTS icrg_score NUMERIC(5,2),
+ADD COLUMN IF NOT EXISTS gpi_score NUMERIC(5,2),
+ADD COLUMN IF NOT EXISTS method_version TEXT DEFAULT 'v2',
+ADD COLUMN IF NOT EXISTS pillar_breakdown JSONB;
