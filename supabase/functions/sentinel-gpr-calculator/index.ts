@@ -193,12 +193,17 @@ function computeFrameworkScores(events: any[]): {
   };
 }
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, content-type"
+};
+
 Deno.serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   // Allow CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, content-type" } });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
@@ -207,7 +212,7 @@ Deno.serve(async (req) => {
     if (!country_code) {
       return new Response(
         JSON.stringify({ ok: false, error: "country_code required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -257,12 +262,12 @@ Deno.serve(async (req) => {
         event_count:    0,
         method_version: "v2",
         pillar_breakdown: {},
-        computed_at: new Date().toISOString(),
+        calculated_at: new Date().toISOString(),
       });
 
       return new Response(
         JSON.stringify({ ok: true, country_code: cc, score: 50, event_count: 0, note: "No events — neutral score assigned" }),
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -298,7 +303,7 @@ Deno.serve(async (req) => {
       pillar_breakdown: breakdown,
       event_count:     events.length,
       method_version:  "v2",
-      computed_at:     new Date().toISOString(),
+      calculated_at:   new Date().toISOString(),
     });
 
     if (insertError) throw insertError;
@@ -311,13 +316,13 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ ok: true, country_code: cc, score: compositeScore, fsi, wgi, acled, icrg, gpi, event_count: events.length, breakdown }),
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
     console.error("CSI v2 calculator error:", err);
     return new Response(
       JSON.stringify({ ok: false, error: err.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

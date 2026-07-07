@@ -10,6 +10,7 @@ import { GlobalRiskMap } from "@/components/sentinel/GlobalRiskMap";
 import { useSentinelRealtime, type SentinelEvent } from "@/hooks/useSentinelRealtime";
 import { ArrowLeft, Search, ChevronDown, Zap, Globe, MessageSquare } from "lucide-react";
 import { ISO_COUNTRIES, ISO_COUNTRY_MAP } from "@/constants/isoCountries";
+import { COUNTRY_COORDS } from "@/lib/countryCoords";
 import { ChatSidebar } from "@/components/sentinel/ChatSidebar";
 import type { GraphEdge, ViewportBounds } from "@/components/sentinel/GlobalRiskMap";
 
@@ -181,6 +182,17 @@ export default function CountryIntelligence() {
             <GlobalRiskMap 
               events={allEvents}
               selectedEventId={selectedEvent?.id}
+              initialViewState={
+                COUNTRY_COORDS[currentCode]
+                  ? {
+                      longitude: COUNTRY_COORDS[currentCode].lng,
+                      latitude: COUNTRY_COORDS[currentCode].lat,
+                      zoom: 4.5,
+                      pitch: 0,
+                      bearing: 0,
+                    }
+                  : undefined
+              }
               onEventClick={(ev) => {
                 setSelectedEvent(ev);
                 setActiveTab('chat');

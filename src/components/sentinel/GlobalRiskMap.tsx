@@ -93,6 +93,7 @@ type Props = {
   liveEvents?: SentinelEvent[];
   flashEventId?: string | null;
   selectedEventId?: string | null;
+  initialViewState?: { longitude: number; latitude: number; zoom: number; pitch: number; bearing: number };
   forceClustering?: boolean;
   showGraph?: boolean;
   graphEdges?: GraphEdge[];
@@ -118,6 +119,7 @@ export function GlobalRiskMap({
   liveEvents = [],
   flashEventId,
   selectedEventId,
+  initialViewState,
   forceClustering = false,
   showGraph = false,
   graphEdges = [],
@@ -125,7 +127,7 @@ export function GlobalRiskMap({
   onViewportChange,
   onEventsLassoed,
 }: Props) {
-  const [viewState, setViewState] = useState<any>(INITIAL_VIEW);
+  const [viewState, setViewState] = useState<any>(initialViewState || INITIAL_VIEW);
   const [tooltip, setTooltip] = useState<TooltipState>(null);
   const [clusters, setClusters] = useState<ClusterObject[]>([]);
   
@@ -134,7 +136,7 @@ export function GlobalRiskMap({
   const [lassoEnd, setLassoEnd] = useState<[number, number] | null>(null);
 
   // Debounced stable zoom — cluster recomputation only fires after user stops scrolling
-  const [stableZoom, setStableZoom] = useState(INITIAL_VIEW.zoom);
+  const [stableZoom, setStableZoom] = useState(initialViewState?.zoom || INITIAL_VIEW.zoom);
   const zoomDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flashRef = useRef<Set<string>>(new Set());
@@ -241,12 +243,12 @@ export function GlobalRiskMap({
       }
     } else {
       setViewState({
-        ...INITIAL_VIEW,
+        ...(initialViewState || INITIAL_VIEW),
         transitionDuration: 1200,
         transitionInterpolator: new FlyToInterpolator(),
       });
     }
-  }, [selectedEventId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedEventId, initialViewState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleViewStateChange = useCallback(
     ({ viewState: vs }: { viewState: any }) => {
