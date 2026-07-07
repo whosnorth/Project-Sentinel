@@ -154,7 +154,7 @@ async function callAiChat(prompt: string, historyMessages: {role: string; conten
           model: modelName,
           messages,
           temperature: 0.3,
-          max_tokens: 2000
+          max_tokens: 8000
         })
       });
 
@@ -344,9 +344,14 @@ If the context is empty, state that no relevant events were found, and answer ba
     
     // Extract only the final assessment for the UI
     let answer = rawAnswer;
-    if (answer.includes("</thought_process>")) {
+    if (answer.includes("<final_assessment>")) {
+      answer = answer.split("<final_assessment>")[1];
+    } else if (answer.includes("</thought_process>")) {
       answer = answer.split("</thought_process>")[1];
+    } else if (answer.includes("<thought_process>")) {
+      answer = "*(The intelligence brief was interrupted or timed out. Partial thought process below)*\n\n" + answer;
     }
+    
     answer = answer.replace(/<final_assessment>/g, "").replace(/<\/final_assessment>/g, "").trim();
 
     // Extract exact source URLs for grounding
