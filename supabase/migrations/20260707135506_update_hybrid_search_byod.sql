@@ -14,16 +14,15 @@ CREATE OR REPLACE FUNCTION hybrid_search_events(
 )
 RETURNS TABLE (
   id uuid,
-  gdelt_id text,
   headline text,
   event_type text,
   occurred_at timestamptz,
-  country_code text,
-  severity int,
+  country_code char(2),
+  severity smallint,
   full_text text,
   ai_analysis jsonb,
   is_proprietary boolean,
-  similarity float
+  similarity double precision
 )
 LANGUAGE plpgsql
 AS $$
@@ -31,7 +30,6 @@ BEGIN
   RETURN QUERY
   SELECT
     e.id,
-    e.gdelt_id,
     e.headline,
     e.event_type,
     e.occurred_at,
@@ -43,7 +41,7 @@ BEGIN
     (e.embedding <#> p_query_embedding) * -1 AS similarity
   FROM sentinel_events e
   WHERE
-    (p_query_text IS NULL OR e.fts @@ websearch_to_tsquery('english', p_query_text))
+    (p_query_text IS NULL OR to_tsvector('english', e.headline || ' ' || coalesce(e.full_text, '')) @@ websearch_to_tsquery('english', p_query_text))
     AND (p_country_code IS NULL OR e.country_code = p_country_code)
     AND (p_start_date IS NULL OR e.occurred_at >= p_start_date)
     AND (p_end_date IS NULL OR e.occurred_at <= p_end_date)

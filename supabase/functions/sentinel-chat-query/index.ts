@@ -54,7 +54,7 @@ function lfTraceUpdate(traceId: string, output: any) {
 
 const FIREWORKS_BASE = "https://api.fireworks.ai/inference/v1";
 const FALLBACK_MODELS = [
-  "accounts/fireworks/models/glm-5p2",
+  "accounts/fireworks/models/deepseek-v4-pro",
 ];
 
 const CORS_HEADERS = {
@@ -76,7 +76,7 @@ Output ONLY a valid JSON object matching this schema, no markdown blocks:
 User Query: "${query}"`;
 
   const genId = crypto.randomUUID();
-  if (traceId) await lfIngest([lfGenerationStart(genId, traceId, "extractFilters", "accounts/fireworks/models/glm-5p2", prompt)]);
+  if (traceId) await lfIngest([lfGenerationStart(genId, traceId, "extractFilters", "accounts/fireworks/models/deepseek-v4-flash", prompt)]);
 
   try {
     const res = await fetch("https://api.fireworks.ai/inference/v1/chat/completions", {
@@ -86,7 +86,7 @@ User Query: "${query}"`;
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "accounts/fireworks/models/glm-5p2",
+        model: "accounts/fireworks/models/deepseek-v4-flash",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.1,
         response_format: { type: "json_object" },

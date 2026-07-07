@@ -5,6 +5,7 @@ import type { SentinelEvent } from "@/hooks/useSentinelRealtime";
 type Props = {
   events: SentinelEvent[];
   onRefresh?: () => void;
+  onEventSelect?: (event: SentinelEvent) => void;
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -21,7 +22,7 @@ const TYPE_LABEL: Record<string, string> = {
   positive: "POS",
 };
 
-export function LiveWirePanel({ events, onRefresh }: Props) {
+export function LiveWirePanel({ events, onRefresh, onEventSelect }: Props) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "nigeria" | "global">("all");
 
@@ -117,6 +118,7 @@ export function LiveWirePanel({ events, onRefresh }: Props) {
             return (
               <div
                 key={event.id}
+                onClick={() => onEventSelect?.(event)}
                 className="border-b border-[#1a2332] px-4 py-3 hover:bg-[#080c10]/60 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2 mb-1">

@@ -5,19 +5,6 @@ import type { Database } from './types';
 export const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL || "https://bmnrwukxkskdazwrralw.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY || (import.meta as any).env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtbnJ3dWt4a3NrZGF6d3JyYWx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTI1NzIsImV4cCI6MjA5ODkyODU3Mn0.m318rw9rXhaC8Zi-kWwnd7NJDl1Awvl5kSgbdB0Bc5s";
 
-// Clear any potentially corrupted session data that might cause 401s
-if (typeof window !== 'undefined') {
-  try {
-    window.localStorage.removeItem('supabase.auth.token');
-    window.sessionStorage.removeItem('supabase.auth.token');
-    for (const key of Object.keys(window.localStorage)) {
-      if (key.startsWith('sb-')) window.localStorage.removeItem(key);
-    }
-    for (const key of Object.keys(window.sessionStorage)) {
-      if (key.startsWith('sb-')) window.sessionStorage.removeItem(key);
-    }
-  } catch (e) {}
-}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
