@@ -48,6 +48,10 @@ function getEventColor(event: SentinelEvent): EventColor {
 }
 
 function getEventRadius(event: SentinelEvent): number {
+  // Make thermal anomalies extremely small so they don't drown out geopolitical events
+  if (event.event_type === "infrastructure" && event.headline.includes("Thermal Anomaly")) {
+    return 5000 + (event.severity || 5) * 2000;
+  }
   return 30000 + (event.severity || 5) * 25000;
 }
 

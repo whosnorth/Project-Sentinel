@@ -24,10 +24,15 @@ export function AlertTriageDrawer({ events, onInvestigate }: Props) {
   const [isOpen, setIsOpen] = useState(true);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  // Only show severity ≥ 8 events that haven't been dismissed
+  // Only show severity ≥ 8 events that haven't been dismissed, and exclude structural baseline metrics & raw satellite anomalies
   const triageEvents = useMemo(
     () => events
-      .filter((e) => (e.severity || 0) >= 8 && !dismissedIds.has(e.id))
+      .filter((e) => 
+        (e.severity || 0) >= 8 && 
+        !dismissedIds.has(e.id) && 
+        e.event_type !== "baseline_metric" &&
+        !(e.event_type === "infrastructure" && e.headline.includes("Thermal Anomaly"))
+      )
       .slice(0, 20), // cap at 20 for performance
     [events, dismissedIds]
   );
