@@ -143,9 +143,7 @@ export default function SentinelDashboard() {
     }
   }, [selectedEvent, showGraph]);
 
-  // Phase 4: health monitoring
-  const health = useSentinelHealth(realtimeStatus);
-  const healthConfig = HEALTH_DOT[realtimeStatus === "reconnecting" ? "reconnecting" : health.status];
+  // Phase 4: health monitoring — declared here so we can reference it, healthConfig computed after progressiveLoad
 
   // Phase 4: progressive background loading for historical events
   const {
@@ -161,6 +159,18 @@ export default function SentinelDashboard() {
     viewportBounds,
     bboxZoomThreshold: BBOX_ZOOM_THRESHOLD,
   });
+
+  const health = useSentinelHealth(realtimeStatus);
+  // If REST data is flowing, don't surface RECONNECTING to the user — only show it when there's truly no data.
+  const effectiveStatus: string =
+    realtimeStatus === "connected"
+      ? health.status
+      : events.length > 0
+      ? health.status
+      : realtimeStatus === "reconnecting"
+      ? "reconnecting"
+      : health.status;
+  const healthConfig = HEALTH_DOT[effectiveStatus] ?? HEALTH_DOT["reconnecting"];
 
   // Fetch timeline bins from server-side aggregation
   const { data: timelineBins = [] } = useQuery({
@@ -331,7 +341,7 @@ export default function SentinelDashboard() {
         <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
           {loadError && (
             <span className="rounded-sm border border-red-500/30 bg-red-500/10 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-red-400">
-              LOAD ERROR
+              LOAD ERROR: {typeof loadError === 'string' ? loadError : JSON.stringify(loadError)}
             </span>
           )}
           <div className="flex items-center gap-1.5 rounded-sm border border-[#1a2332] bg-[#0d1117]/80 px-2 py-1 backdrop-blur">

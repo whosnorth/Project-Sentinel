@@ -51,16 +51,21 @@ function getEventRadius(event: SentinelEvent): number {
   return 30000 + (event.severity || 5) * 25000;
 }
 
-// Returns the colour for a cluster based on the highest-priority (worst-case) event inside it
-function getClusterColor(objects: SentinelEvent[]): EventColor {
-  if (!objects || objects.length === 0) return [161, 161, 170, 200];
-  const dominant = objects.reduce((best, e) => {
+function getDominantEvent(objects: SentinelEvent[]): SentinelEvent | null {
+  if (!objects || objects.length === 0) return null;
+  return objects.reduce((best, e) => {
     const priority = EVENT_TYPE_PRIORITY[e.event_type] ?? 99;
     const bestPriority = EVENT_TYPE_PRIORITY[best.event_type] ?? 99;
     if (priority < bestPriority) return e;
     if (priority === bestPriority && (e.severity || 0) > (best.severity || 0)) return e;
     return best;
   }, objects[0]);
+}
+
+// Returns the colour for a cluster based on the highest-priority (worst-case) event inside it
+function getClusterColor(objects: SentinelEvent[]): EventColor {
+  const dominant = getDominantEvent(objects);
+  if (!dominant) return [161, 161, 170, 200];
   const base = getEventColor(dominant);
   return [base[0], base[1], base[2], 220] as EventColor;
 }
@@ -169,7 +174,17 @@ export function GlobalRiskMap({
   }, []);
 
   const validEvents = useMemo(
-    () => events.filter((e) => e.lat != null && e.lng != null),
+    () => {
+      return [...events]
+        .filter((e) => e.lat != null && e.lng != null)
+        .sort((a, b) => {
+          // Priority: lower number = more important. We want more important at the END of the array (drawn on top)
+          const pA = EVENT_TYPE_PRIORITY[a.event_type] ?? 99;
+          const pB = EVENT_TYPE_PRIORITY[b.event_type] ?? 99;
+          if (pA !== pB) return pB - pA;
+          return (a.severity || 0) - (b.severity || 0);
+        });
+    },
     [events]
   );
   const validLive = useMemo(
@@ -257,7 +272,7 @@ export function GlobalRiskMap({
   const handleHover = useCallback((info: PickingInfo) => {
     if (info.object) {
       const obj = info.object as any;
-      const event: SentinelEvent = obj.objects ? obj.objects[0] : obj;
+      const event: SentinelEvent = obj.objects ? getDominantEvent(obj.objects) : obj;
       setTooltip({ x: info.x, y: info.y, event });
     } else {
       setTooltip(null);
@@ -268,7 +283,7 @@ export function GlobalRiskMap({
     (info: PickingInfo) => {
       if (info.object) {
         const obj = info.object as any;
-        const event: SentinelEvent = obj.objects ? obj.objects[0] : obj;
+        const event: SentinelEvent = obj.objects ? getDominantEvent(obj.objects) : obj;
         onEventClick?.(event);
       }
     },

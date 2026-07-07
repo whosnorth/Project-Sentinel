@@ -153,7 +153,6 @@ async function callAiChat(prompt: string, historyMessages: {role: string; conten
         },
         body: JSON.stringify({
           model: modelName,
-          plugins: [{ id: "web" }],
           messages,
           temperature: 0.3,
           max_tokens: 2000
@@ -187,28 +186,20 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-  // ── Security: Require valid JWT ────────────────────────────────────────────
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
-      status: 401, headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
-    });
-  }
-  
-  let userId = "00000000-0000-0000-0000-000000000000"; // Default for service role
-  const token = authHeader.replace("Bearer ", "").trim();
-  
-  if (token !== SUPABASE_SERVICE_KEY) {
-    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } }
-    });
-    const { data: { user }, error: authErr } = await authClient.auth.getUser();
-    if (authErr || !user) {
-      return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
-        status: 401, headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+  let userId = "00000000-0000-0000-0000-000000000000"; // Default for anon/service role
+
+  if (authHeader) {
+    const token = authHeader.replace("Bearer ", "").trim();
+    if (token !== SUPABASE_SERVICE_KEY) {
+      const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } }
       });
+      const { data: { user } } = await authClient.auth.getUser();
+      if (user) {
+        userId = user.id;
+      }
     }
-    userId = user.id;
   }
 
   try {

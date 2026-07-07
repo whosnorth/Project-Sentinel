@@ -213,6 +213,24 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
           }
         }
         
+        // Fallback to localStorage if no DB session
+        if (!targetSessionId) {
+          const storageKey = `sentinel_chat_${selectedEvent?.id || (bulkEvents ? 'bulk' : 'global')}`;
+          const cached = localStorage.getItem(storageKey);
+          if (cached) {
+            try {
+              const parsed = JSON.parse(cached);
+              if (parsed && parsed.length > 0) {
+                setMessages(parsed.map((m: any) => ({
+                  ...m,
+                  timestamp: new Date(m.timestamp)
+                })));
+                return;
+              }
+            } catch (err) {}
+          }
+        }
+        
         // No history found or no target
         setSessionId(null);
         if (bulkEvents && bulkEvents.length > 0) {
@@ -238,7 +256,13 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+    
+    // Save to localStorage whenever messages change (excluding the initial empty load)
+    if (messages.length > 0) {
+      const storageKey = `sentinel_chat_${selectedEvent?.id || (bulkEvents ? 'bulk' : 'global')}`;
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+    }
+  }, [messages, selectedEvent?.id, bulkEvents]);
 
   const exportBrief = useCallback((msg: Message) => {
     let content = `# Sentinel Intelligence Brief\n\n`;

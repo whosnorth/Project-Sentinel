@@ -29,7 +29,6 @@ export type SentinelRiskScore = {
 };
 
 // Fields that are safe to send to clients — strips large/raw DB columns
-// that are broadcast in the full Realtime payload but not needed in the UI
 const SAFE_EVENT_FIELDS: (keyof SentinelEvent)[] = [
   "id", "headline", "country_code", "region", "city",
   "lat", "lng", "event_type", "severity", "ai_analysis", "occurred_at",
@@ -44,7 +43,6 @@ type Callbacks = {
   onStatusChange?: (status: "connected" | "reconnecting" | "disconnected") => void;
 };
 
-const MAX_RETRIES = 6;
 const BASE_DELAY_MS = 1000;
 const MAX_DELAY_MS = 30000;
 
@@ -81,18 +79,33 @@ export function useSentinelRealtime({
       return safe as SentinelEvent;
     }
 
+    function scheduleReconnect() {
+      if (destroyed) return;
+      const delay = Math.min(BASE_DELAY_MS * Math.pow(2, retries), MAX_DELAY_MS);
+      console.warn(`[Sentinel Realtime] Retrying connection in ${Math.round(delay / 1000)}s (attempt ${retries + 1})`);
+      retries++;
+      retryTimer = setTimeout(() => {
+        if (channel) {
+          supabase.removeChannel(channel);
+          channel = null;
+        }
+        connect();
+      }, delay);
+    }
+
     function connect() {
       if (destroyed) return;
 
+      // Use a unique channel name each time to avoid stale-channel collisions on Supabase's side
       channel = supabase
-        .channel("sentinel-realtime")
+        .channel(`sentinel-live-${Date.now()}`)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "sentinel_events" },
           (payload) => {
             const safe = stripToSafeEvent(payload.new as Record<string, unknown>);
             onEventRef.current?.(safe);
-            onNewEventRef.current?.(safe); // backward compat
+            onNewEventRef.current?.(safe);
           }
         )
         .on(
@@ -106,34 +119,41 @@ export function useSentinelRealtime({
           if (destroyed) return;
 
           if (status === "SUBSCRIBED") {
-            retries = 0;
+            retries = 0; // reset backoff counter on success
+            console.log("[Sentinel Realtime] Connected ✓");
             onStatusRef.current?.("connected");
           } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            console.warn(`[Sentinel Realtime] ${status}`, err);
             onStatusRef.current?.("reconnecting");
-
-            if (retries < MAX_RETRIES) {
-              const delay = Math.min(BASE_DELAY_MS * Math.pow(2, retries++), MAX_DELAY_MS);
-              console.warn(`[Sentinel Realtime] ${status} — retry ${retries}/${MAX_RETRIES} in ${delay}ms`, err);
-              retryTimer = setTimeout(() => {
-                if (channel) supabase.removeChannel(channel);
-                connect();
-              }, delay);
-            } else {
-              console.error("[Sentinel Realtime] Max retries exceeded — feed offline");
-              onStatusRef.current?.("disconnected");
-            }
+            scheduleReconnect(); // never give up — always retry
           } else if (status === "CLOSED") {
-            if (!destroyed) onStatusRef.current?.("disconnected");
+            if (!destroyed) {
+              onStatusRef.current?.("reconnecting");
+              scheduleReconnect(); // re-open on unexpected close too
+            }
           }
         });
     }
 
     connect();
 
+    // Reconnect when tab becomes visible again (covers browser tab sleep / network changes)
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible" && !destroyed) {
+        console.log("[Sentinel Realtime] Tab visible — ensuring connection");
+        if (retryTimer) clearTimeout(retryTimer);
+        if (channel) supabase.removeChannel(channel);
+        retries = 0;
+        connect();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       destroyed = true;
       if (retryTimer) clearTimeout(retryTimer);
       if (channel) supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []); // stable — all callbacks are accessed via refs
 }

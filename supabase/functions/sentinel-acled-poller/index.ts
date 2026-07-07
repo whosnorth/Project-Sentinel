@@ -194,6 +194,7 @@ Deno.serve(async (req: Request) => {
         } else {
           console.error("Embedding generation failed:", await res.text());
         }
+
       } catch (err) {
         console.error("Failed to generate embeddings:", err);
       }
@@ -208,10 +209,10 @@ Deno.serve(async (req: Request) => {
       
     if (insertError) throw insertError;
 
-    // ── 6. Fire AI Reasoner ───────────────────────────────────────────────────
+    // ── 6. Fire Macro Orchestrator ───────────────────────────────────────────────────
     if (HIGH_SEVERITY_BATCH.length > 0) {
       const condensed = HIGH_SEVERITY_BATCH.slice(0, 10).map(condense);
-      await supabase.functions.invoke("sentinel-ai-reasoner", {
+      await supabase.functions.invoke("sentinel-macro-orchestrator", {
         body: { events: condensed },
       });
     }
@@ -230,4 +231,3 @@ Deno.serve(async (req: Request) => {
     );
   }
 });
-

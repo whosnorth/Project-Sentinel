@@ -265,18 +265,15 @@ Deno.serve(async (req) => {
         console.error("Failed to generate embeddings, inserting with null:", err);
       }
     }
-
     const { error: insertError } = await supabase
       .from("sentinel_events")
       .upsert(dbEvents, { onConflict: "source_url", ignoreDuplicates: true });
     if (insertError) throw insertError;
 
-    // ── 5. Fire AI reasoner ONLY for high-severity events ────────────────────
-    // Typically 0-5 events per batch. Each run = at most 1 AI call (batched).
-    // Low/medium events (severity < 8) need no summary — headline + CAMEO label suffice.
+    // ── 5. Fire Macro Orchestrator ONLY for high-severity events ────────────────────
     if (HIGH_SEVERITY_BATCH.length > 0) {
       const condensed = HIGH_SEVERITY_BATCH.slice(0, 10).map(condense);
-      await supabase.functions.invoke("sentinel-ai-reasoner", {
+      await supabase.functions.invoke("sentinel-macro-orchestrator", {
         body: { events: condensed },
       });
     }
@@ -295,4 +292,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-
