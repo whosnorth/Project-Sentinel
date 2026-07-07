@@ -217,7 +217,7 @@ Source: ${event.url || "Unknown"}
           headline: finalJson.description ? `${finalJson.entity}: ${finalJson.description}` : event.headline,
         });
 
-      } catch (err) {
+      } catch (err: any) {
         console.error(`Failed to process event ${event.id || event.url}:`, err);
       }
     }));
