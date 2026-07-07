@@ -154,7 +154,7 @@ async function callAiChat(prompt: string, historyMessages: {role: string; conten
           model: modelName,
           messages,
           temperature: 0.3,
-          max_tokens: 8000
+          max_tokens: 32000
         })
       });
 
