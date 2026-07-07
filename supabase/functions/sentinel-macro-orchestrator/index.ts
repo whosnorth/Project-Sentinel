@@ -15,10 +15,10 @@ const langfuse = new Langfuse({
 const FIREWORKS_BASE = "https://api.fireworks.ai/inference/v1";
 
 // Environmental Model Configuration
-const MACRO_MODEL = Deno.env.get("MACRO_MODEL") || "accounts/fireworks/models/deepseek-v4-pro";
-const FORMATTER_MODEL = Deno.env.get("FORMATTER_MODEL") || "accounts/fireworks/models/deepseek-v4-flash";
-const VISION_MODEL = Deno.env.get("VISION_MODEL") || "accounts/fireworks/models/deepseek-v4-pro";
-const CODER_MODEL = Deno.env.get("CODER_MODEL") || "accounts/fireworks/models/deepseek-v4-flash";
+const MACRO_MODEL = Deno.env.get("MACRO_MODEL") || "accounts/fireworks/models/deepseek-v3";
+const FORMATTER_MODEL = Deno.env.get("FORMATTER_MODEL") || "accounts/fireworks/models/qwen2p5-72b-instruct";
+const VISION_MODEL = Deno.env.get("VISION_MODEL") || "accounts/fireworks/models/deepseek-v3";
+const CODER_MODEL = Deno.env.get("CODER_MODEL") || "accounts/fireworks/models/qwen2p5-72b-instruct";
 
 // Helper to interact with Fireworks Chat Completion
 async function callModel(model: string, messages: any[], temperature = 0.5, maxTokens = 2000, responseFormat = null) {

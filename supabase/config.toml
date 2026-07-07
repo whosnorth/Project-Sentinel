@@ -1,0 +1,28 @@
+project_id = "bmnrwukxkskdazwrralw"
+
+[functions.sentinel-acled-poller]
+verify_jwt = false
+
+[functions.sentinel-firms-poller]
+verify_jwt = false
+
+[functions.sentinel-fred-poller]
+verify_jwt = false
+
+[functions.sentinel-gdacs-poller]
+verify_jwt = false
+
+[functions.sentinel-gdelt-poller]
+verify_jwt = false
+
+[functions.sentinel-imf-poller]
+verify_jwt = false
+
+[functions.sentinel-reliefweb-poller]
+verify_jwt = false
+
+[functions.sentinel-usgs-poller]
+verify_jwt = false
+
+[functions.sentinel-worldbank-poller]
+verify_jwt = false
