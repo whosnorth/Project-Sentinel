@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { RiskIndexCard } from "@/components/sentinel/RiskIndexCard";
 import { Search, Star, StarOff, Pin } from "lucide-react";
 import { ISO_COUNTRIES, ISO_COUNTRY_MAP } from "@/constants/isoCountries";
@@ -119,7 +119,7 @@ export default function RiskMatrix() {
       const token = session.data.session?.access_token;
       const apiKey = (import.meta as any).env.VITE_FIREWORKS_API_KEY;
       await fetch(
-        `${(import.meta as any).env.VITE_SUPABASE_URL}/functions/v1/sentinel-gpr-calculator`,
+        `${SUPABASE_URL}/functions/v1/sentinel-gpr-calculator`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },

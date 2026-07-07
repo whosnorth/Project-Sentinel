@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://bmnrwukxkskdazwrralw.supabase.co";
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://bmnrwukxkskdazwrralw.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtbnJ3dWt4a3NrZGF6d3JyYWx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTI1NzIsImV4cCI6MjA5ODkyODU3Mn0.m318rw9rXhaC8Zi-kWwnd7NJDl1Awvl5kSgbdB0Bc5s";
 
 // Clear any potentially corrupted session data that might cause 401s

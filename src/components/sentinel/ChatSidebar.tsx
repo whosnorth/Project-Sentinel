@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Loader2, MessageSquare, X, Download, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { type SentinelEvent } from "@/hooks/useSentinelRealtime";
 
@@ -110,7 +110,7 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
       const token = session.data.session?.access_token;
 
       const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sentinel-deep-research`,
+        `${SUPABASE_URL}/functions/v1/sentinel-deep-research`,
         {
           method: "POST",
           headers: {
@@ -375,7 +375,7 @@ export function ChatSidebar({ selectedEvent, bulkEvents, onClose, countryCode, o
       const token = session.data.session?.access_token;
       
       const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sentinel-chat-query`,
+        `${SUPABASE_URL}/functions/v1/sentinel-chat-query`,
         {
           method: "POST",
           headers: {

@@ -48,7 +48,7 @@ import { WorkflowRunLog } from '@/components/sentinel/workflows/WorkflowRunLog';
 import { Button } from '@/components/ui/button';
 import { Plus, Save, LayoutGrid, FolderOpen, Trash2, MapPin, Play, Power, PowerOff, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 
 function WorkflowCanvas() {
@@ -243,7 +243,7 @@ function WorkflowCanvas() {
         headline: `[TEST RUN] ${latestEvent.headline}`,
       };
       const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/execute-sentinel-workflows`,
+        `${SUPABASE_URL}/functions/v1/execute-sentinel-workflows`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

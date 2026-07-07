@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { RiskIndexCard } from "@/components/sentinel/RiskIndexCard";
 import { TrendChart } from "@/components/sentinel/TrendChart";
 import { HeatMatrix } from "@/components/sentinel/HeatMatrix";
@@ -84,7 +84,7 @@ export default function CountryIntelligence() {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
       await fetch(
-        `${(import.meta as any).env.VITE_SUPABASE_URL}/functions/v1/sentinel-gpr-calculator`,
+        `${SUPABASE_URL}/functions/v1/sentinel-gpr-calculator`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
