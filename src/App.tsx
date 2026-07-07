@@ -12,6 +12,8 @@ import SentinelRiskMatrix from "./pages/sentinel/RiskMatrix";
 import SentinelIntelChat from "./pages/sentinel/IntelChat";
 import SentinelChatHistory from "./pages/sentinel/ChatHistory";
 import SentinelWorkflows from "./pages/sentinel/SentinelWorkflows";
+import AuthPage from "./pages/Auth";
+import { AuthRoute } from "./components/AuthRoute";
 
 // Simple fallback
 const LoadingFallback = () => (
@@ -27,7 +29,8 @@ const App = () => (
     <BrowserRouter>
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
-          <Route path="/" element={<SentinelLayout />}>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/" element={<AuthRoute><SentinelLayout /></AuthRoute>}>
             <Route index element={<SentinelDashboard />} />
             <Route path="country" element={<CountryIntelligence />} />
             <Route path="country/:code" element={<CountryIntelligence />} />

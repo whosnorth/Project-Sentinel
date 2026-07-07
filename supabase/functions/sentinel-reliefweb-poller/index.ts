@@ -6,7 +6,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FIREWORKS_API_KEY = Deno.env.get("FIREWORKS_API_KEY");
 
-const RELIEFWEB_URL = "https://api.reliefweb.int/v1/reports?appname=sentinel&limit=50&profile=full";
+const RELIEFWEB_URL = "https://api.reliefweb.int/v2/reports?appname=sentinel&limit=50&profile=full";
 
 Deno.serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);

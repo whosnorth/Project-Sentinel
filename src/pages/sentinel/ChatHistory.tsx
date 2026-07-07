@@ -90,7 +90,7 @@ export default function ChatHistory() {
             {filteredSessions.map((session) => (
               <div 
                 key={session.id}
-                onClick={() => navigate(`/sentinel/chat?session=${session.id}`)}
+                onClick={() => navigate(`/chat?session=${session.id}`)}
                 className="group relative flex cursor-pointer flex-col justify-between rounded-sm border border-[#1a2332] bg-[#0a0e14] p-4 transition-all hover:border-amber-500/40 hover:bg-[#0d1117]"
               >
                 <div>

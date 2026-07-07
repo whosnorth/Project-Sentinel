@@ -62,14 +62,27 @@ function LocalClock() {
   );
 }
 
-// Temporary mock user
-const mockUser = {
-  email: "analyst@sentinel.ops",
-  role: "Lead Analyst"
-};
+import { supabase } from "@/integrations/supabase/client";
 
 export const SentinelLayout = () => {
   const location = useLocation();
+  const [userEmail, setUserEmail] = useState<string>("analyst@sentinel.ops");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) {
+        setUserEmail(user.email);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.email) {
+        setUserEmail(session.user.email);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -148,10 +161,10 @@ export const SentinelLayout = () => {
                     <UserCircle className="h-5 w-5 text-zinc-500" />
                     <div className="grid flex-1 text-left text-xs leading-tight ml-2">
                       <span className="truncate font-mono font-bold text-zinc-300">
-                        {mockUser.email.split("@")[0]}
+                        {userEmail.split("@")[0]}
                       </span>
                       <span className="truncate font-mono text-[9px] uppercase tracking-widest text-amber-500/70">
-                        {mockUser.role}
+                        Lead Analyst
                       </span>
                     </div>
                   </SidebarMenuButton>
@@ -161,7 +174,9 @@ export const SentinelLayout = () => {
                   className="w-56 rounded-none border-[#1a2332] bg-[#080c10] text-zinc-300"
                 >
                   <DropdownMenuItem
-                    onClick={() => console.log("Logout clicked")}
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                    }}
                     className="cursor-pointer text-red-400 hover:bg-[#0d1117] focus:text-red-400"
                   >
                     <LogOut className="mr-2 h-4 w-4" />

@@ -51,21 +51,15 @@ export default function CountryIntelligence() {
   const { data: riskScore, refetch: refetchRisk } = useQuery({
     queryKey: ["sentinel-risk-score-country", currentCode],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_latest_risk_score", {
-        p_country_code: currentCode,
-      });
-      if (error) {
-        // Fallback: query directly
-        const { data: fb } = await supabase
-          .from("sentinel_risk_scores")
-          .select("*")
-          .eq("country_code", currentCode)
-          .order("computed_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        return fb ?? null;
-      }
-      return data?.[0] ?? null;
+      const { data, error } = await supabase
+        .from("risk_scores")
+        .select("*")
+        .eq("country_code", currentCode)
+        .order("calculated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data ?? null;
     },
   });
 
@@ -90,7 +84,7 @@ export default function CountryIntelligence() {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
       await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sentinel-gpr-calculator`,
+        `${(import.meta as any).env.VITE_SUPABASE_URL}/functions/v1/sentinel-gpr-calculator`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -108,7 +102,7 @@ export default function CountryIntelligence() {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-4 border-b border-[#1a2332] px-6 py-3">
         <button
-          onClick={() => navigate("/sentinel/matrix")}
+          onClick={() => navigate("/matrix")}
           className="text-zinc-500 hover:text-zinc-300 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -152,7 +146,7 @@ export default function CountryIntelligence() {
                   <button
                     key={c.code}
                     onClick={() => {
-                      navigate(`/sentinel/country/${c.code}`);
+                      navigate(`/country/${c.code}`);
                       setShowPicker(false);
                       setCountrySearch("");
                     }}
@@ -203,13 +197,13 @@ export default function CountryIntelligence() {
           {score !== null && (
             <RiskIndexCard
               score={score}
-              fsiScore={riskScore?.fsi_score ?? undefined}
-              wgiScore={riskScore?.wgi_score ?? undefined}
-              acledScore={riskScore?.acled_score ?? undefined}
-              icrgScore={riskScore?.icrg_score ?? undefined}
-              gpiScore={riskScore?.gpi_score ?? undefined}
-              breakdown={riskScore?.pillar_breakdown ?? undefined}
-              methodVersion={riskScore?.method_version ?? "v1"}
+              fsiScore={(riskScore as any)?.fsi_score ?? undefined}
+              wgiScore={(riskScore as any)?.wgi_score ?? undefined}
+              acledScore={(riskScore as any)?.acled_score ?? undefined}
+              icrgScore={(riskScore as any)?.icrg_score ?? undefined}
+              gpiScore={(riskScore as any)?.gpi_score ?? undefined}
+              breakdown={(riskScore as any)?.pillar_breakdown ?? undefined}
+              methodVersion={(riskScore as any)?.method_version ?? "v1"}
             />
           )}
 

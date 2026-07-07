@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,17 +6,7 @@ import { RiskIndexCard } from "@/components/sentinel/RiskIndexCard";
 import { Search, Star, StarOff, Pin } from "lucide-react";
 import { ISO_COUNTRIES, ISO_COUNTRY_MAP } from "@/constants/isoCountries";
 
-const STORAGE_KEY = "sentinel_pinned_countries";
 const DEFAULT_PINS = ["NG", "UA", "IQ", "SS", "YE", "SY", "CD", "ET", "AF", "MM"];
-
-function getStoredPins(): string[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : DEFAULT_PINS;
-  } catch {
-    return DEFAULT_PINS;
-  }
-}
 
 function scoreToBadge(score: number): { cls: string; label: string } {
   if (score >= 70) return { cls: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400", label: "STABLE" };
@@ -33,8 +23,25 @@ function scoreBarColor(score: number): string {
 export default function RiskMatrix() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [pinnedCodes, setPinnedCodes] = useState<string[]>(getStoredPins);
+  const [pinnedCodes, setPinnedCodes] = useState<string[]>(DEFAULT_PINS);
   const [analyzingCode, setAnalyzingCode] = useState<string | null>(null);
+  
+  // Load pins from database on mount
+  useEffect(() => {
+    async function loadPins() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data, error } = await (supabase as any)
+        .from("sentinel_user_pins")
+        .select("pinned_codes")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data && data.pinned_codes) {
+        setPinnedCodes(data.pinned_codes);
+      }
+    }
+    loadPins();
+  }, []);
 
   const { data: scores = [], refetch } = useQuery({
     queryKey: ["sentinel-all-risk-scores-v2"],
@@ -43,11 +50,11 @@ export default function RiskMatrix() {
         .from("v_country_stability_latest")
         .select("*");
       if (error) {
-        // Fallback: query sentinel_risk_scores directly
+        // Fallback: query risk_scores directly
         const { data: fallback, error: fbErr } = await supabase
-          .from("sentinel_risk_scores")
+          .from("risk_scores")
           .select("*")
-          .order("computed_at", { ascending: false })
+          .order("calculated_at", { ascending: false })
           .limit(200);
         if (fbErr) throw fbErr;
         // Deduplicate: latest per country
@@ -93,12 +100,16 @@ export default function RiskMatrix() {
     ).slice(0, 8);
   }, [search]);
 
-  function togglePin(code: string) {
-    setPinnedCodes((prev) => {
-      const next = prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+  async function togglePin(code: string) {
+    const next = pinnedCodes.includes(code) ? pinnedCodes.filter((c) => c !== code) : [...pinnedCodes, code];
+    setPinnedCodes(next); // Optimistic UI update
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await (supabase as any)
+        .from("sentinel_user_pins")
+        .upsert({ user_id: user.id, pinned_codes: next });
+    }
   }
 
   async function triggerAnalysis(code: string) {
@@ -106,8 +117,9 @@ export default function RiskMatrix() {
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
+      const apiKey = (import.meta as any).env.VITE_FIREWORKS_API_KEY;
       await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sentinel-gpr-calculator`,
+        `${(import.meta as any).env.VITE_SUPABASE_URL}/functions/v1/sentinel-gpr-calculator`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -155,7 +167,7 @@ export default function RiskMatrix() {
                   className="flex items-center gap-3 px-3 py-2 hover:bg-[#1a2332] transition-colors"
                 >
                   <button
-                    onClick={() => navigate(`/sentinel/country/${c.code}`)}
+                    onClick={() => navigate(`/country/${c.code}`)}
                     className="flex-1 flex items-center gap-3 text-left"
                   >
                     <span className="font-mono text-[10px] font-bold text-amber-400 w-8">{c.code}</span>
@@ -220,7 +232,7 @@ export default function RiskMatrix() {
             <div
               key={code}
               className="rounded-sm border border-[#1a2332] bg-[#0d1117] overflow-hidden cursor-pointer hover:border-amber-500/30 transition-colors group"
-              onClick={() => navigate(`/sentinel/country/${code}`)}
+              onClick={() => navigate(`/country/${code}`)}
             >
               {/* Card Header */}
               <div className="flex items-center justify-between px-3 py-2 border-b border-[#1a2332]">
