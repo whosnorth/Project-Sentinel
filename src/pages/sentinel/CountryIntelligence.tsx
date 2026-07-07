@@ -180,6 +180,7 @@ export default function CountryIntelligence() {
           <div className="flex-1 min-h-0">
             <GlobalRiskMap 
               events={allEvents}
+              selectedEventId={selectedEvent?.id}
               onEventClick={(ev) => {
                 setSelectedEvent(ev);
                 setActiveTab('chat');

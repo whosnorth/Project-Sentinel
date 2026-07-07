@@ -213,15 +213,29 @@ Deno.serve(async (req) => {
 
     const cc = country_code.toUpperCase();
 
+    // Get the user's organization_id from the Auth header (if any) to include their BYOD data
+    const authHeader = req.headers.get('Authorization');
+    let organizationId = "00000000-0000-0000-0000-000000000001"; // Fallback to a mock test tenant
+    if (authHeader) {
+      const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
+        global: { headers: { Authorization: authHeader } }
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user && user.app_metadata?.organization_id) {
+        organizationId = user.app_metadata.organization_id;
+      }
+    }
+
     // Fetch events from the past 90 days for this country
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString();
 
     const { data: events, error: fetchError } = await supabase
       .from("sentinel_events")
-      .select("id, event_type, severity, occurred_at, lat, lng")
+      .select("id, event_type, severity, occurred_at, lat, lng, organization_id")
       .eq("country_code", cc)
       .gte("occurred_at", ninetyDaysAgo)
       .not("severity", "is", null)
+      .or(`organization_id.is.null,organization_id.eq.${organizationId}`)
       .order("occurred_at", { ascending: false })
       .limit(500);
 
@@ -229,7 +243,7 @@ Deno.serve(async (req) => {
 
     if (!events || events.length === 0) {
       // No events — write a neutral score of 50 (unknown, not confirmed stable or unstable)
-      await supabase.from("sentinel_risk_scores").insert({
+      await supabase.from("risk_scores").insert({
         country_code: cc,
         score:          50,
         security_score: 50,
@@ -270,7 +284,7 @@ Deno.serve(async (req) => {
     const economyScore  = breakdown.fsi_economic  ?? 50;
     const socialScore   = breakdown.fsi_social    ?? 50;
 
-    const { error: insertError } = await supabase.from("sentinel_risk_scores").insert({
+    const { error: insertError } = await supabase.from("risk_scores").insert({
       country_code:    cc,
       score:           compositeScore,
       security_score:  securityScore,
