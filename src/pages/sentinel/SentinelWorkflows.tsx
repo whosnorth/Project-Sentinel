@@ -481,7 +481,7 @@ function WorkflowCanvas() {
                   </label>
                   <select 
                     className="w-full bg-[#080c10] border border-white/20 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00f0ff]"
-                    value={selectedNode.data.label as string}
+                    value={options.some(o => o.label === selectedNode.data.label) ? (selectedNode.data.label as string) : ""}
                     onChange={(e) => {
                       const selectedOpt = options.find(o => o.label === e.target.value);
                       if (selectedOpt) {

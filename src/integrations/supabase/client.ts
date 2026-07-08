@@ -10,11 +10,7 @@ const SUPABASE_PUBLISHABLE_KEY = (import.meta as any).env.VITE_SUPABASE_PUBLISHA
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: sessionStorage,
-    persistSession: false,
-    autoRefreshToken: false,
-  },
+  // auth defaults (persistSession: true, autoRefreshToken: true) are used
   global: {
     fetch: (url, options) => {
       const controller = new AbortController();

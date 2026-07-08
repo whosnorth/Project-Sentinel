@@ -241,7 +241,7 @@ export function useSentinelProgressiveLoad(opts: Options): Result {
     };
   // Re-run whenever key parameters change (window, category, location, viewport)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [window, category, JSON.stringify(location), currentZoom >= bboxZoomThreshold ? JSON.stringify(viewportBounds) : null]);
+  }, [window, category, JSON.stringify(location), currentZoom >= bboxZoomThreshold ? JSON.stringify(viewportBounds) : null, dataSource]);
 
   return {
     events,
