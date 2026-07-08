@@ -831,6 +831,65 @@ function WorkflowCanvas() {
                     </div>
                   )}
 
+                  {selectedNode.data.label === 'Keyword Match Detected' && (
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-400 block">Keywords to Track (comma separated)</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. hack, breach, ransomware"
+                        className="w-full bg-slate-900/50 border border-white/20 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00f0ff]"
+                        value={(selectedNode.data.config as any)?.keywords || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNodes(nds => nds.map(n => {
+                            if (n.id === selectedNode.id) {
+                              return { 
+                                ...n, 
+                                data: { 
+                                  ...n.data, 
+                                  config: { ...(n.data.config as any || {}), keywords: val },
+                                  description: `Fires on events containing: ${val || 'specified buzzwords'}`
+                                } 
+                              };
+                            }
+                            return n;
+                          }));
+                        }}
+                      />
+                      <p className="text-[10px] text-slate-500">
+                        Workflow will trigger if any of these words appear in the intelligence feed.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedNode.data.label === 'Send Email Alert' && (
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-400 block">Recipient Email Address</label>
+                      <input 
+                        type="email" 
+                        placeholder="alert@yourorg.com"
+                        className="w-full bg-slate-900/50 border border-white/20 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-[#ff0055]"
+                        value={(selectedNode.data.config as any)?.email_to || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNodes(nds => nds.map(n => {
+                            if (n.id === selectedNode.id) {
+                              return { 
+                                ...n, 
+                                data: { 
+                                  ...n.data, 
+                                  config: { ...(n.data.config as any || {}), email_to: val },
+                                  description: `Dispatches critical alert email to ${val || 'configured address'}`
+                                } 
+                              };
+                            }
+                            return n;
+                          }));
+                        }}
+                      />
+                    </div>
+                  )}
+
                   {!['Geospatial Event Detected', 'Send Webhook URL', 'Alert Sentinel Analysts', 'Country Stability Threshold', 'Generate Intel Report', 'Keyword Match Detected', 'Send Email Alert', 'Cyber Threat Identified', 'Financial Market Anomaly', 'Supply Chain Disruption', 'Run Deep Research'].includes(selectedNode.data.label as string) && (
                     <p className="text-xs text-slate-500 italic">No customizable parameters for this node type.</p>
                   )}
