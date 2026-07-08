@@ -458,11 +458,13 @@ function WorkflowCanvas() {
             { label: 'Financial Market Anomaly', desc: 'Triggers on sudden currency devaluation or crash' },
             { label: 'Supply Chain Disruption', desc: 'Triggers when a major logistics route is blocked' },
             { label: 'Country Stability Threshold', desc: 'Triggers when a country CSI score drops below a set threshold' },
+            { label: 'Keyword Match Detected', desc: 'Triggers when an event contains specific buzzwords' },
           ] : [
             { label: 'Run Deep Research', desc: 'Extracts supply chain entities and graphs the impact cascade' },
             { label: 'Send Webhook URL', desc: 'Sends JSON payload to external system' },
             { label: 'Generate Intel Report', desc: 'Uses AI to summarize the cascading impact and emails the report' },
             { label: 'Alert Sentinel Analysts', desc: 'Pushes high-priority notification to all analysts in org' },
+            { label: 'Send Email Alert', desc: 'Sends an automated email alert to a specific address' },
           ];
 
           return (

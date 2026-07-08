@@ -78,6 +78,13 @@ async function evaluateTrigger(
       return (scores.score ?? 100) < parseFloat(config.threshold);
     }
 
+    case "Keyword Match Detected": {
+      if (!config.keywords) return false;
+      const keywords = config.keywords.split(',').map((k: string) => k.trim().toLowerCase());
+      const searchSpace = `${event.headline ?? ''} ${event.description ?? ''}`.toLowerCase();
+      return keywords.some((kw: string) => kw.length > 0 && searchSpace.includes(kw));
+    }
+
     default:
       // Unknown trigger type — do not fire to avoid false positives
       return false;
@@ -191,6 +198,42 @@ async function executeAction(
           status: "ok",
           detail: `${emailDetail}. Report: ${reportText.slice(0, 200)}…`,
         };
+      }
+
+      case "Send Email Alert": {
+        const targetEmail = config.target_email;
+        if (!targetEmail) {
+          return { label, status: "error", detail: "Missing target email address" };
+        }
+
+        const subject = `[Sentinel Alert] Keyword Match: ${event.headline ?? "New Event"}`;
+        const body = `
+          <h2>Sentinel Alert Triggered</h2>
+          <p><strong>Event:</strong> ${event.headline}</p>
+          <p><strong>Description:</strong> ${event.description}</p>
+          <p><strong>Severity:</strong> ${event.severity}/10</p>
+          <p><strong>Location:</strong> ${event.country_code ?? "Global"}</p>
+          <br/>
+          <a href="https://sentinel.app/dashboard">View in Console</a>
+        `;
+
+        const { error: emailErr } = await supabase.functions.invoke("send-digest", {
+          body: { to: targetEmail, subject, body },
+        });
+
+        // Also push a standard notification to the dashboard
+        await supabase.from("user_notifications").insert({
+          tenant_id: event.organization_id || workflow.tenant_id,
+          title: "Email Alert Dispatched",
+          message: `An automated email alert was sent to ${targetEmail} for event: ${event.headline}`,
+          type: "info"
+        });
+
+        if (emailErr) {
+          throw new Error(`Email dispatch failed: ${emailErr.message}`);
+        }
+
+        return { label, status: "ok", detail: `Alert emailed successfully to ${targetEmail}` };
       }
 
       default:
