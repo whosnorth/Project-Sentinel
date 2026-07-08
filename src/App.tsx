@@ -23,13 +23,16 @@ const LoadingFallback = () => (
   </div>
 );
 
+import { AuthProvider } from "./components/AuthProvider";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
+    <AuthProvider>
+      <BrowserRouter>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/" element={<AuthRoute><SentinelLayout /></AuthRoute>}>
             <Route index element={<SentinelDashboard />} />
@@ -45,6 +48,7 @@ const App = () => (
         </Routes>
       </Suspense>
     </BrowserRouter>
+    </AuthProvider>
     <Toaster />
   </QueryClientProvider>
 );
