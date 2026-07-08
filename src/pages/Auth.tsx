@@ -108,7 +108,32 @@ export default function AuthPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 flex flex-col items-center space-y-4">
+          <button
+            type="button"
+            onClick={async () => {
+              setLoading(true);
+              try {
+                const { error } = await supabase.auth.signInWithPassword({
+                  email: 'agent@sentinel.ai',
+                  password: 'SentinelDemo2026!',
+                });
+                if (error) throw error;
+                toast.success("Welcome, Judge! Demo authentication successful.");
+                navigate("/");
+              } catch (error: any) {
+                toast.error(error.message);
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="w-full bg-[#1a232d] hover:bg-[#253241] border border-blue-500/30 hover:border-blue-500/60 text-blue-400 font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 transition-all disabled:opacity-50"
+          >
+            <User className="w-4 h-4" />
+            <span>One-Click Demo Access</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
