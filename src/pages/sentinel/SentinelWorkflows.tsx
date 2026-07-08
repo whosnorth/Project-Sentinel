@@ -633,6 +633,70 @@ function WorkflowCanvas() {
                     </div>
                   )}
 
+                  {['Cyber Threat Identified', 'Financial Market Anomaly', 'Supply Chain Disruption'].includes(selectedNode.data.label as string) && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-xs text-slate-400 block">Minimum Severity (0-10)</label>
+                        <input 
+                          type="number" 
+                          min="0" max="10"
+                          className="w-full bg-slate-900/50 border border-white/20 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00f0ff]"
+                          value={(selectedNode.data.config as any)?.severity || 5}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setNodes(nds => nds.map(n => {
+                              if (n.id === selectedNode.id) {
+                                return { 
+                                  ...n, 
+                                  data: { 
+                                    ...n.data, 
+                                    config: { ...(n.data.config as any || {}), severity: val },
+                                    description: `Triggers on events with a minimum severity of ${val || 5}`
+                                  } 
+                                };
+                              }
+                              return n;
+                            }));
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedNode.data.label === 'Run Deep Research' && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-xs text-slate-400 block">Research Depth Level (1-5)</label>
+                        <input 
+                          type="range" 
+                          min="1" max="5" step="1"
+                          className="w-full accent-[#ff0055]"
+                          value={(selectedNode.data.config as any)?.depth || 3}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setNodes(nds => nds.map(n => {
+                              if (n.id === selectedNode.id) {
+                                return { 
+                                  ...n, 
+                                  data: { 
+                                    ...n.data, 
+                                    config: { ...(n.data.config as any || {}), depth: val },
+                                    description: `Extracts supply chain entities at depth level ${val || 3}`
+                                  } 
+                                };
+                              }
+                              return n;
+                            }));
+                          }}
+                        />
+                        <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                          <span>Shallow</span>
+                          <span>Deep</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {selectedNode.data.label === 'Send Webhook URL' && (
                     <div className="space-y-2">
                       <label className="text-xs text-slate-400 block">Endpoint URL</label>
@@ -767,7 +831,7 @@ function WorkflowCanvas() {
                     </div>
                   )}
 
-                  {!['Geospatial Event Detected', 'Send Webhook URL', 'Alert Sentinel Analysts', 'Country Stability Threshold', 'Generate Intel Report'].includes(selectedNode.data.label as string) && (
+                  {!['Geospatial Event Detected', 'Send Webhook URL', 'Alert Sentinel Analysts', 'Country Stability Threshold', 'Generate Intel Report', 'Keyword Match Detected', 'Send Email Alert', 'Cyber Threat Identified', 'Financial Market Anomaly', 'Supply Chain Disruption', 'Run Deep Research'].includes(selectedNode.data.label as string) && (
                     <p className="text-xs text-slate-500 italic">No customizable parameters for this node type.</p>
                   )}
                 </div>

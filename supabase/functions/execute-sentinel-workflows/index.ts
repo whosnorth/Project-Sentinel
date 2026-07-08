@@ -55,14 +55,20 @@ async function evaluateTrigger(
       return true;
     }
 
-    case "Cyber Threat Identified":
-      return event.event_type === "security";
+    case "Cyber Threat Identified": {
+      const minSev = parseInt(config.severity ?? "5", 10);
+      return event.event_type === "security" && (event.severity ?? 0) >= minSev;
+    }
 
-    case "Financial Market Anomaly":
-      return event.event_type === "economy";
+    case "Financial Market Anomaly": {
+      const minSev = parseInt(config.severity ?? "5", 10);
+      return event.event_type === "economy" && (event.severity ?? 0) >= minSev;
+    }
 
-    case "Supply Chain Disruption":
-      return ["infrastructure", "trade", "border", "economy", "social"].includes(event.event_type ?? "");
+    case "Supply Chain Disruption": {
+      const minSev = parseInt(config.severity ?? "5", 10);
+      return ["infrastructure", "trade", "border", "economy", "social"].includes(event.event_type ?? "") && (event.severity ?? 0) >= minSev;
+    }
 
     case "Country Stability Threshold": {
       if (!config.country_code || config.threshold === undefined) return false;
