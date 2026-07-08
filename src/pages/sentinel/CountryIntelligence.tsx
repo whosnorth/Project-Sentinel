@@ -21,6 +21,7 @@ export default function CountryIntelligence() {
   const [countrySearch, setCountrySearch] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [analyzingCode, setAnalyzingCode] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<"ALL" | "OSINT" | "BESPOKE">("ALL");
 
   const [activeTab, setActiveTab] = useState<'analytics' | 'chat'>('analytics');
   const [selectedEvent, setSelectedEvent] = useState<SentinelEvent | null>(null);
@@ -43,14 +44,19 @@ export default function CountryIntelligence() {
 
   // Events for this country
   const { data: events = [], refetch } = useQuery({
-    queryKey: ["sentinel-events-country", currentCode],
+    queryKey: ["sentinel-events-country", currentCode, dataSource],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("sentinel_events")
         .select("*")
         .eq("country_code", currentCode)
         .order("occurred_at", { ascending: false })
         .limit(100);
+      
+      if (dataSource === "OSINT") q = (q as any).eq("is_proprietary", false);
+      else if (dataSource === "BESPOKE") q = (q as any).eq("is_proprietary", true);
+
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as SentinelEvent[];
     },
@@ -75,6 +81,9 @@ export default function CountryIntelligence() {
 
   useSentinelRealtime({
     onNewEvent: (e) => {
+      if (dataSource === "OSINT" && e.is_proprietary) return;
+      if (dataSource === "BESPOKE" && !e.is_proprietary) return;
+
       if (e.country_code === currentCode) {
         setLiveEvents((prev) => [e, ...prev].slice(0, 30));
       }
@@ -128,8 +137,18 @@ export default function CountryIntelligence() {
           </p>
         </div>
 
-        {/* Country picker */}
-        <div className="ml-auto relative">
+        {/* Country picker & Data Source filter */}
+        <div className="ml-auto flex items-center gap-2 relative">
+          <select
+            value={dataSource}
+            onChange={(e) => setDataSource(e.target.value as any)}
+            className="bg-[#0d1117] border border-[#1a2332] rounded-sm px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-zinc-400 focus:outline-none focus:border-amber-500"
+          >
+            <option value="ALL">ALL DATA</option>
+            <option value="OSINT">OSINT ONLY</option>
+            <option value="BESPOKE">BESPOKE ONLY</option>
+          </select>
+
           <button
             onClick={() => setShowPicker((s) => !s)}
             className="flex items-center gap-2 rounded-sm border border-[#1a2332] bg-[#0d1117] px-3 py-1.5 font-mono text-[10px] text-zinc-400 hover:border-amber-500/40 hover:text-amber-400 transition-colors"

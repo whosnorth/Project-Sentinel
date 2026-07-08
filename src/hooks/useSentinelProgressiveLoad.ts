@@ -21,6 +21,7 @@ type Options = {
   currentZoom: number;
   viewportBounds: ViewportBounds | null;
   bboxZoomThreshold: number;
+  dataSource?: "ALL" | "OSINT" | "BESPOKE";
 };
 
 type Result = {
@@ -39,7 +40,8 @@ async function fetchChunk(
   currentZoom: number,
   viewportBounds: ViewportBounds | null,
   bboxZoomThreshold: number,
-  limit: number
+  limit: number,
+  dataSource?: "ALL" | "OSINT" | "BESPOKE"
 ): Promise<SentinelEvent[]> {
   let q = supabase
     .from("sentinel_events")
@@ -70,6 +72,9 @@ async function fetchChunk(
   else if (category === "INFRASTRUCTURE") q = q.in("event_type", ["infrastructure", "environmental"]);
   else if (category === "POSITIVE") q = q.eq("event_type", "positive");
 
+  if (dataSource === "OSINT") q = (q as any).eq("is_proprietary", false);
+  else if (dataSource === "BESPOKE") q = (q as any).eq("is_proprietary", true);
+
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as SentinelEvent[];
@@ -88,7 +93,7 @@ async function fetchChunk(
  * the 10k ceiling is hit.
  */
 export function useSentinelProgressiveLoad(opts: Options): Result {
-  const { window, category, location, currentZoom, viewportBounds, bboxZoomThreshold } = opts;
+  const { window, category, location, currentZoom, viewportBounds, bboxZoomThreshold, dataSource = "ALL" } = opts;
 
   const [events, setEvents] = useState<SentinelEvent[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -146,7 +151,8 @@ export function useSentinelProgressiveLoad(opts: Options): Result {
         currentZoom,
         viewportBounds,
         bboxZoomThreshold,
-        Math.min(2000, remaining)
+        Math.min(2000, remaining),
+        dataSource
       );
 
       if (signal.aborted) return;
@@ -180,7 +186,7 @@ export function useSentinelProgressiveLoad(opts: Options): Result {
         loadNextChunk(nextOffset, merged, signal);
       }, CHUNK_DELAY_MS);
     },
-    [category, location, currentZoom, viewportBounds, bboxZoomThreshold, totalWindowDays]
+    [category, location, currentZoom, viewportBounds, bboxZoomThreshold, totalWindowDays, dataSource]
   );
 
   useEffect(() => {
@@ -212,7 +218,8 @@ export function useSentinelProgressiveLoad(opts: Options): Result {
         currentZoom,
         viewportBounds,
         bboxZoomThreshold,
-        2000
+        2000,
+        dataSource
       )
         .then((data) => {
           if (!signal.aborted) {

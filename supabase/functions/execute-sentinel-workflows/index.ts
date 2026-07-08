@@ -35,6 +35,11 @@ async function evaluateTrigger(
   const config = trigger.data?.config || {};
   const label  = (trigger.data?.label as string) ?? "";
 
+  // Data Source Filtering
+  const dataSource = config.data_source || "ALL";
+  if (dataSource === "OSINT" && event.is_proprietary === true) return false;
+  if (dataSource === "BESPOKE" && event.is_proprietary === false) return false;
+
   switch (label) {
     case "Geospatial Event Detected": {
       const minSev = parseInt(config.severity ?? "8", 10);

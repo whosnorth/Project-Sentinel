@@ -66,6 +66,7 @@ export default function SentinelDashboard() {
   const [location, setLocation] = useState<LocationSelection>({ type: "global" });
   const [window, setWindow] = useState<string>("24H");
   const [category, setCategory] = useState<string>("ALL");
+  const [dataSource, setDataSource] = useState<"ALL" | "OSINT" | "BESPOKE">("ALL");
   const [activeTab, setActiveTab] = useState<'analytics' | 'chat'>('analytics');
   const [flashId, setFlashId] = useState<string | null>(null);
   const [liveEvents, setLiveEvents] = useState<SentinelEvent[]>([]);
@@ -158,6 +159,7 @@ export default function SentinelDashboard() {
     currentZoom,
     viewportBounds,
     bboxZoomThreshold: BBOX_ZOOM_THRESHOLD,
+    dataSource,
   });
 
   const health = useSentinelHealth(realtimeStatus);
@@ -218,6 +220,17 @@ export default function SentinelDashboard() {
 
   useSentinelRealtime({
     onEvent: useCallback((event: SentinelEvent) => {
+      // Data source filter
+      if (dataSource === "OSINT" && event.is_proprietary) return;
+      if (dataSource === "BESPOKE" && !event.is_proprietary) return;
+
+      // Category filter
+      if (category === "SECURITY" && event.event_type !== "security") return;
+      if (category === "ECONOMY" && !["economy", "baseline_metric"].includes(event.event_type)) return;
+      if (category === "CULTURE" && event.event_type !== "social") return;
+      if (category === "INFRASTRUCTURE" && !["infrastructure", "environmental"].includes(event.event_type)) return;
+      if (category === "POSITIVE" && event.event_type !== "positive") return;
+
       let shouldInclude = location.type === "global";
       if (!shouldInclude && location.type === "country") {
         shouldInclude = event.country_code === location.code;
@@ -229,7 +242,7 @@ export default function SentinelDashboard() {
         setFlashId(event.id);
         setTimeout(() => setFlashId(null), 3000);
       }
-    }, [location]),
+    }, [location, dataSource, category]),
     onRiskUpdate: useCallback((score: any) => {
       if (location.type === "country" && score.country_code === location.code) {
         setLiveScore(score.score);
@@ -289,6 +302,15 @@ export default function SentinelDashboard() {
           {/* Location selector */}
           <div className="flex gap-1">
             <LocationSelector value={location} onChange={setLocation} />
+            <select
+              value={dataSource}
+              onChange={(e) => setDataSource(e.target.value as any)}
+              className="bg-[#0d1117]/80 border border-[#1a2332] rounded-sm px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-zinc-400 focus:outline-none focus:border-amber-500"
+            >
+              <option value="ALL">ALL DATA</option>
+              <option value="OSINT">OSINT ONLY</option>
+              <option value="BESPOKE">BESPOKE ONLY</option>
+            </select>
           </div>
 
           {/* Time window */}

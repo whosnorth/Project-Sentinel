@@ -514,6 +514,35 @@ function WorkflowCanvas() {
                 {/* Dynamic Configuration Fields */}
                 <div className="pt-4 border-t border-white/10">
                   <h3 className="text-xs text-[#00f0ff] font-mono mb-4 uppercase tracking-wider">Parameters</h3>
+
+                  {isTrigger && (
+                    <div className="space-y-2 mb-6">
+                      <label className="text-xs text-slate-400 block">Data Source Filter</label>
+                      <select 
+                        className="w-full bg-slate-900/50 border border-white/20 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00f0ff]"
+                        value={(selectedNode.data.config as any)?.data_source || 'ALL'}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNodes(nds => nds.map(n => {
+                            if (n.id === selectedNode.id) {
+                              return { 
+                                ...n, 
+                                data: { 
+                                  ...n.data, 
+                                  config: { ...(n.data.config as any || {}), data_source: val }
+                                } 
+                              };
+                            }
+                            return n;
+                          }));
+                        }}
+                      >
+                        <option value="ALL">All Data</option>
+                        <option value="OSINT">OSINT Data Only</option>
+                        <option value="BESPOKE">Bespoke Data Only</option>
+                      </select>
+                    </div>
+                  )}
                   
                   {selectedNode.data.label === 'Geospatial Event Detected' && (
                     <div className="space-y-4">
