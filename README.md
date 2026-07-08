@@ -1,6 +1,6 @@
 # Real-Time Supply Chain & Geopolitical Threat Intelligence via High-Velocity Agentic Workflows
-**Compli-metrics / Project Sentinel**
-*By Obaloluwa J. Alege*
+**From: Compli-metrics / Project Sentinel**
+**By: Hon. Obaloluwa J. Alege**
 
 **Why enterprise-grade AI requires smarter orchestration, not infinite compute.**
 
