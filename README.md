@@ -1,6 +1,12 @@
 # Real-Time Supply Chain & Geopolitical Threat Intelligence via High-Velocity Agentic Workflows
 ### *Project Sentinel: Why enterprise-grade AI requires smarter orchestration, not infinite compute.*
 
+<p align="center">
+  <img src="assets/qr_code.png" alt="Project Sentinel Video Demo QR Code" width="250">
+  <br>
+  <em>Scan to watch the Project Sentinel architecture and video demo</em>
+</p>
+
 **TL;DR:** Sentinel is an autonomous geopolitical threat intelligence platform powered by AMD MI300X and Fireworks AI. It ingests thousands of global events, calculates real-time systemic risk, and maps supply chain cascades in under 300ms - delivering enterprise-grade intelligence while reducing traditional LLM compute costs by 90%.
 
 ---
