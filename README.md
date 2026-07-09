@@ -187,3 +187,11 @@ The system leverages Fireworks AI on AMD MI300X accelerators to run hybrid seman
 We have proven that with the right architecture, enterprise-grade threat intelligence can operate autonomously, securely, and at lightning speed - without the astronomical cloud bills associated with legacy AI deployments. 
 
 The global supply chain is moving faster than human analysts can track. If a critical shipping lane shuts down tonight, does your current intelligence stack know which of your facilities goes offline next week, or are you still waiting for the morning news to tell you?
+
+---
+
+### **Connect with the Creator**
+**Hon. Obaloluwa J. Alege** 
+* **LinkedIn:** [Hon. Obaloluwa Alege](https://www.linkedin.com/in/hon-obaloluwa-alege-b300a6309/)
+* **GitHub:** [@whosnorth](https://github.com/whosnorth)
+* **Email:** [complimetrics@gmail.com](mailto:complimetrics@gmail.com)
