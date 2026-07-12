@@ -18,10 +18,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL      = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const LAMBDA = 0.05; // per day — decay constant
+const LAMBDA_DEFAULT = 0.05; // per day — decay constant
 
-// ── Framework Weights ──────────────────────────────────────────────────────────
-const FRAMEWORK_WEIGHTS = {
+// ── Default Framework Weights (used when org has no custom formula) ────────────
+const DEFAULT_FRAMEWORK_WEIGHTS = {
   fsi:   0.25,
   wgi:   0.25,
   acled: 0.20,
@@ -29,10 +29,8 @@ const FRAMEWORK_WEIGHTS = {
   gpi:   0.10,
 };
 
-// ── Event Type → Framework Bucket Mapping ─────────────────────────────────────
-// Each event_type maps to one or more framework indicator buckets.
-// An event can contribute to multiple frameworks (e.g. a security event feeds FSI, GPI, and ACLED).
-const EVENT_BUCKET_MAP: Record<string, string[]> = {
+// ── Default Event Type → Framework Bucket Mapping ────────────────────────────
+const DEFAULT_EVENT_BUCKET_MAP: Record<string, string[]> = {
   // Security / violence events → feed FSI-cohesion, GPI-conflict, ACLED-deadliness
   security:       ["fsi_cohesion", "gpi_conflict", "acled_deadliness", "wgi_stability"],
   conflict:       ["fsi_cohesion", "gpi_conflict", "acled_deadliness", "wgi_stability"],
@@ -65,8 +63,46 @@ const EVENT_BUCKET_MAP: Record<string, string[]> = {
   positive:       [],
 };
 
+// ── Load org formula config from DB ─────────────────────────────────────────
+async function loadOrgFormula(supabase: any, organizationId: string): Promise<{
+  lambda: number;
+  weights: typeof DEFAULT_FRAMEWORK_WEIGHTS;
+  bucketMap: typeof DEFAULT_EVENT_BUCKET_MAP;
+} | null> {
+  if (!organizationId || organizationId === "00000000-0000-0000-0000-000000000001") {
+    return null; // Platform test org — always use defaults
+  }
+  try {
+    const { data, error } = await supabase
+      .from("organization_scoring_formulas")
+      .select("formula_config")
+      .eq("organization_id", organizationId)
+      .eq("is_active", true)
+      .eq("formula_type", "gpr")
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    const cfg = data.formula_config;
+    const lambda = cfg.decay_lambda ?? LAMBDA_DEFAULT;
+    const weights = {
+      fsi:   cfg.frameworks?.fsi?.weight   ?? DEFAULT_FRAMEWORK_WEIGHTS.fsi,
+      wgi:   cfg.frameworks?.wgi?.weight   ?? DEFAULT_FRAMEWORK_WEIGHTS.wgi,
+      acled: cfg.frameworks?.acled?.weight ?? DEFAULT_FRAMEWORK_WEIGHTS.acled,
+      icrg:  cfg.frameworks?.icrg?.weight  ?? DEFAULT_FRAMEWORK_WEIGHTS.icrg,
+      gpi:   cfg.frameworks?.gpi?.weight   ?? DEFAULT_FRAMEWORK_WEIGHTS.gpi,
+    };
+    const bucketMap = cfg.bucket_event_map ?? DEFAULT_EVENT_BUCKET_MAP;
+    console.log(`[GPR] Loaded custom formula for org ${organizationId}: λ=${lambda}, weights=`, weights);
+    return { lambda, weights, bucketMap };
+  } catch (e) {
+    console.error("[GPR] Failed to load org formula, using defaults:", e);
+    return null;
+  }
+}
+
 // ── Framework Score Computation ────────────────────────────────────────────────
-function computeFrameworkScores(events: any[]): {
+function computeFrameworkScores(events: any[], lambda: number, bucketMap: typeof DEFAULT_EVENT_BUCKET_MAP): {
   fsi: number; wgi: number; acled: number; icrg: number; gpi: number;
   breakdown: Record<string, number>;
 } {
@@ -82,7 +118,7 @@ function computeFrameworkScores(events: any[]): {
 
   for (const event of events) {
     const deltaT = (now - new Date(event.occurred_at).getTime()) / (1000 * 3600 * 24); // days
-    const decayFactor = Math.exp(-LAMBDA * deltaT);
+    const decayFactor = Math.exp(-lambda * deltaT);
     const severity = event.severity ?? 5;
 
     const eventType = (event.event_type as string) ?? "baseline_metric";
@@ -272,15 +308,21 @@ Deno.serve(async (req) => {
     }
 
     // ── Compute CSI v2 ─────────────────────────────────────────────────────────
-    const { fsi, wgi, acled, icrg, gpi, breakdown } = computeFrameworkScores(events);
+    // Load org formula (custom or default)
+    const orgFormula = await loadOrgFormula(supabase, organizationId);
+    const lambda       = orgFormula?.lambda    ?? LAMBDA_DEFAULT;
+    const weights      = orgFormula?.weights   ?? DEFAULT_FRAMEWORK_WEIGHTS;
+    const bucketMap    = orgFormula?.bucketMap ?? DEFAULT_EVENT_BUCKET_MAP;
+
+    const { fsi, wgi, acled, icrg, gpi, breakdown } = computeFrameworkScores(events, lambda, bucketMap);
 
     // Weighted composite (100 = most stable)
     const compositeScore = Math.round(
-      fsi   * FRAMEWORK_WEIGHTS.fsi   +
-      wgi   * FRAMEWORK_WEIGHTS.wgi   +
-      acled * FRAMEWORK_WEIGHTS.acled +
-      icrg  * FRAMEWORK_WEIGHTS.icrg  +
-      gpi   * FRAMEWORK_WEIGHTS.gpi
+      fsi   * weights.fsi   +
+      wgi   * weights.wgi   +
+      acled * weights.acled +
+      icrg  * weights.icrg  +
+      gpi   * weights.gpi
     );
 
     // Legacy v1 column compatibility (keep security/economy/social using old buckets,

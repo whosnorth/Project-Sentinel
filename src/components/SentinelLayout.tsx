@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   Clock,
   Database,
+  Settings2,
+  Calculator,
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,6 +47,8 @@ const navItems = [
   { path: "/history",  icon: Clock,          label: "Chat History",     sub: "PAST INVESTIGATIONS" },
   { path: "/workflows", icon: LayoutGrid,     label: "Workflow Engine",  sub: "AUTOMATION" },
   { path: "/data-sources", icon: Database,    label: "Data Sources",     sub: "BYOD INGESTION" },
+  { path: "/llm-settings", icon: Settings2,   label: "LLM Config",       sub: "BYOLLM" },
+  { path: "/formula-builder", icon: Calculator, label: "Formula Builder", sub: "CUSTOM SCORING" },
 ];
 
 function LocalClock() {

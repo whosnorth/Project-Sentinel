@@ -15,6 +15,8 @@ import { DataSources } from "./pages/sentinel/DataSources";
 import SentinelWorkflows from "./pages/sentinel/SentinelWorkflows";
 import AuthPage from "./pages/Auth";
 import { AuthRoute } from "./components/AuthRoute";
+import LLMSettings from "./pages/sentinel/LLMSettings";
+import FormulaBuilder from "./pages/sentinel/FormulaBuilder";
 
 // Simple fallback
 const LoadingFallback = () => (
@@ -44,6 +46,8 @@ const App = () => (
             <Route path="history" element={<SentinelChatHistory />} />
             <Route path="workflows" element={<SentinelWorkflows />} />
             <Route path="data-sources" element={<DataSources />} />
+            <Route path="llm-settings" element={<LLMSettings />} />
+            <Route path="formula-builder" element={<FormulaBuilder />} />
           </Route>
         </Routes>
       </Suspense>
