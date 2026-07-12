@@ -1,14 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Calculator, Save, CheckCircle2, Star, StarOff, RefreshCw, Info,
   Plus, Trash2, ChevronDown, ChevronUp, BarChart3, Sliders
 } from "lucide-react";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type FrameworkKey = "fsi" | "wgi" | "acled" | "icrg" | "gpi";

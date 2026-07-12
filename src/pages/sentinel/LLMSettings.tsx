@@ -1,14 +1,9 @@
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Settings2, Cpu, Zap, Globe, Plus, Trash2, TestTube2,
   CheckCircle2, XCircle, Eye, EyeOff, AlertTriangle, Lock, Wifi, WifiOff
 } from "lucide-react";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 const PROVIDER_PRESETS: Record<string, { base_url: string; models: { id: string; label: string }[] }> = {
   fireworks: {
