@@ -301,9 +301,11 @@ async function embedQuery(query: string): Promise<number[]> {
 }
 
 // ── AGENTIC CHAT GENERATOR (with tool-calling loop) ──────────────────────────
-// Supports up to 2 tool-call iterations. On each iteration:
+// Supports up to 1 tool-call iteration. On each iteration:
 // - If model returns text: done.
-// - If model returns tool_calls: execute search, inject result, loop.
+// - If model returns tool_calls: execute search, inject result, loop once.
+// A 45-second deadline guard ensures graceful degradation before the
+// Supabase Edge Function 60s hard kill kicks in.
 async function callAiChat(
   systemPrompt: string,
   historyMessages: {role: string; content: string}[],
@@ -313,6 +315,9 @@ async function callAiChat(
 ): Promise<{ content: string; webUrls: string[] }> {
   let lastError: any = null;
   const collectedWebUrls: string[] = [];
+  // Hard deadline: 45 seconds from function entry, leaving 15s buffer before
+  // Supabase's 60s wall-clock kill. If exceeded, return a graceful message.
+  const deadline = Date.now() + 45_000;
 
   const messages: any[] = [
     ...historyMessages,
@@ -320,8 +325,17 @@ async function callAiChat(
   ];
 
   for (const modelName of FALLBACK_MODELS) {
-    // Max 2 tool-call iterations to prevent runaway loops
-    for (let iteration = 0; iteration < 2; iteration++) {
+    // Max 1 tool-call iteration — one web search round is sufficient.
+    // Two rounds compounds latency and reliably hits the 60s edge function limit.
+    for (let iteration = 0; iteration < 1; iteration++) {
+      // ── Deadline guard: bail out gracefully before Supabase kills us ──────
+      if (Date.now() > deadline) {
+        console.warn(`[AgentLoop] 45s deadline reached at iter=${iteration}. Returning graceful degradation.`);
+        return {
+          content: "⚠️ **Analysis time budget exceeded.** The intelligence engine ran out of processing time for this open-ended query. For a fast, focused brief, click a specific event on the 3D globe and ask your question there.",
+          webUrls: collectedWebUrls
+        };
+      }
       const genId = crypto.randomUUID();
       if (traceId && iteration === 0) {
         await lfIngest([lfGenerationStart(genId, traceId, "callAiChat", modelName, messages)]);
@@ -650,9 +664,17 @@ If the context is empty, state that no relevant events were found in Sentinel's 
     const hasByodData = !!(bulk_events && bulk_events.length > 0);
     const organizationId = "00000000-0000-0000-0000-000000000001"; // TODO: extract from JWT for multi-org
     const webSearchAllowed = await isWebSearchEnabled(supabase, organizationId, hasByodData);
-    const activeTools = webSearchAllowed ? SEARCH_TOOLS : [];
 
-    console.log(`[Chat] webSearch=${webSearchAllowed ? 'enabled' : 'disabled (BYOD opt-out)'}, tools=${activeTools.length}`);
+    // ── Freeform query guard ─────────────────────────────────────────────────
+    // If the user has NOT clicked an event and has NOT lassoed a bulk selection,
+    // disable the search_web tool entirely. This makes freeform queries a single
+    // fast LLM call (RAG context → LLM → response) with no agentic tool loop,
+    // eliminating the primary source of "Analysis timed out" errors.
+    // Tools are re-enabled automatically when a focused event context is present.
+    const hasFocusedContext = !!(event_context || (bulk_events && bulk_events.length > 0));
+    const activeTools = (webSearchAllowed && hasFocusedContext) ? SEARCH_TOOLS : [];
+
+    console.log(`[Chat] webSearch=${webSearchAllowed ? 'enabled' : 'disabled'}, focusedContext=${hasFocusedContext}, tools=${activeTools.length}`);
 
     const { content: rawAnswer, webUrls } = await callAiChat(
       systemPrompt,
