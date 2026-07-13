@@ -537,6 +537,16 @@ Deno.serve(async (req) => {
           ? event_context.headline
           : (query.length > 60 ? query.substring(0, 60) : query);
 
+        // ── Institutional RAG quality floors ────────────────────────────────
+        // For freeform queries (no focused event), apply strict quality gates:
+        //   • severity >= 4  — regional significance minimum; cuts local accidents/minor incidents
+        //   • source_credibility >= 0.6 — Tier-2+ sources only; drops local/regional outlets
+        // For event-click queries, pass through as-is so the focused event's own
+        // context is not filtered (it may be a low-severity event the user explicitly selected).
+        const isFreeformSearch = !event_context && !(bulk_events && bulk_events.length > 0);
+        const ragMinSeverity = isFreeformSearch ? (filters.min_severity || 4) : (filters.min_severity || null);
+        const ragMinCredibility = isFreeformSearch ? 0.6 : 0.0;
+
         const { data: dbEvents, error: dbErr } = await supabase.rpc('hybrid_search_events', {
           p_query_text: optimizedQueryText,
           p_query_embedding: queryEmbedding,
@@ -544,9 +554,11 @@ Deno.serve(async (req) => {
           p_country_code: finalCountry || null,
           p_start_date: filters.start_date || null,
           p_end_date: filters.end_date || null,
-          p_min_severity: filters.min_severity || null,
-          p_organization_id: "00000000-0000-0000-0000-000000000001"
+          p_min_severity: ragMinSeverity,
+          p_organization_id: "00000000-0000-0000-0000-000000000001",
+          p_min_credibility: ragMinCredibility
         });
+        console.log(`[RAG] freeform=${isFreeformSearch}, severity_floor=${ragMinSeverity}, credibility_floor=${ragMinCredibility}`);
 
         if (dbErr) throw dbErr;
         relevantEvents = dbEvents || [];
@@ -643,6 +655,18 @@ GROUNDING RULES:
 4. When you use search_web, formulate a precise, factual query. After receiving results, always cite the source URL in your response.
 5. If no tool call is needed and context is insufficient, say so explicitly — do not fill gaps with training memory.
 
+INSTITUTIONAL OUTPUT STANDARDS:
+When producing investment, trade, or asset recommendation tables, you MUST follow this EXACT column structure. No exceptions:
+| Asset / Instrument | Direction | Entry Rationale | 30-Day Return Range | Model-Implied Return (Base Case) | Probability | Confidence Level |
+|---|---|---|---|---|---|---|
+Rules for each column:
+- "Direction": Long, Short, or Neutral only.
+- "30-Day Return Range": A range e.g. "+30% to +50%" — never a single number.
+- "Model-Implied Return (Base Case)": The midpoint of the range in bold e.g. "**+40%**".
+- "Probability": A percentage e.g. "72%" — derived from scenario analysis of the grounding events.
+- "Confidence Level": One of: Low / Medium / High / Very High — based on source quality and event certainty.
+NEVER use the phrase "Simulation-Projected Return". It implies deterministic forecasting, which is inappropriate for geopolitical risk analysis. Always use "Model-Implied Return (Base Case)" to convey probabilistic scenario framing.
+
 ${focusedEventStr}
 ${deterministicGraphStr}
 
@@ -696,9 +720,11 @@ If the context is empty, state that no relevant events were found in Sentinel's 
     
     answer = answer.replace(/<final_assessment>/g, "").replace(/<\/final_assessment>/g, "").trim();
 
-    // Extract exact source URLs from RAG events
+    // Extract exact source URLs from RAG events — only surface credible sources (0.6+)
+    // in the grounding appendix. Local outlets (credibility 0.3) are used for RAG context
+    // but hidden from the UI to maintain institutional presentation standards.
     const sources = (relevantEvents || [])
-      .filter((e: any) => e.source_url)
+      .filter((e: any) => e.source_url && (e.source_credibility == null || e.source_credibility >= 0.6))
       .slice(0, 5)
       .map((e: any) => ({
         label: `[${(e.event_type || 'UNKNOWN').toUpperCase()}] ${e.headline ? e.headline.substring(0, 40) + '...' : 'Sentinel Report'}`,
